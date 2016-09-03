@@ -29,7 +29,7 @@ math_func = {'+' : summation,
 
 solution_path = []
 
-class GreedyBestFirst:
+class SearchAlgorithm:
 	def __init__(self, start, goal, operations_list):
 		self.start_node = Node(None, None, int(start))
 		self.current_node = self.start_node
@@ -38,40 +38,6 @@ class GreedyBestFirst:
 		self.num_nodesexpanded = 0
 		self.OPEN = []
 		self.CLOSED = []
-
-	def gbf_search(self):
-		while(self.current_node.value != self.goal):
-			self.current_node.createChildren(self.operations_list)
-			self.num_nodesexpanded += 1
-			self.CLOSED.append(self.current_node)
-			for child in self.current_node.children:
-				if(child not in self.OPEN) and (child not in self.CLOSED):
-					self.OPEN.append(child)
-					self.reorderOpen()
-			self.current_node = self.OPEN.pop(0)
-		return self.current_node
-
-	def reorderOpen(self):
-		new_list = []
-		for node in self.OPEN:
-			if not new_list:
-				new_list.append(node)
-			else:	
-				for item in new_list:
-					h1 = abs(self.goal - node.value)
-					h2 = abs(self.goal - item.value)
-					if(h1 < h2):
-						new_list.append(node)
-						break
-		self.OPEN = new_list
-
-class IterativeDeepening:
-	def __init__(self, start, goal, operations_list):
-		self.start_node = Node(None, None, int(start))
-		self.current_node = self.start_node
-		self.goal = goal
-		self.operations_list = operations_list
-		self.num_nodesexpanded = 0
 		self.depth = 0
 
 	def dl_search(self, node, depth):
@@ -99,6 +65,32 @@ class IterativeDeepening:
 				return self.current_node
 			else:
 				depth += 1
+
+	def gbf_search(self):
+		while(self.current_node.value != self.goal):
+			self.current_node.createChildren(self.operations_list)
+			self.num_nodesexpanded += 1
+			self.CLOSED.append(self.current_node)
+			for child in self.current_node.children:
+				if(child not in self.OPEN) and (child not in self.CLOSED):
+					self.OPEN.append(child)
+					self.reorderOpen()
+			self.current_node = self.OPEN.pop(0)
+		return self.current_node
+
+	def reorderOpen(self):
+		new_list = []
+		for node in self.OPEN:
+			if not new_list:
+				new_list.append(node)
+			else:	
+				for item in new_list:
+					h1 = abs(self.goal - node.value)
+					h2 = abs(self.goal - item.value)
+					if(h1 < h2):
+						new_list.append(node)
+						break
+		self.OPEN = new_list
 
 class Operation:
 	def __init__(self, operator, integer):
@@ -128,10 +120,6 @@ class Node:
 			print (str(self.parent.value) + ' ' + self.operation.operator + ' ' + str(self.operation.integer) + ' = ' + str(self.value))
 			solution_path.append(self.parent)
 			self.parent.backtrackNode()
-
-def printSteps(node_list):
-	for node in node_list:
-		print (node)
 
 
 def parse_operations(strlist):
@@ -168,11 +156,10 @@ operations_parsed = parse_operations(operations)
 try:
     with time_limit_manager(int(time_limit)):
     	start_time = time.time()
+    	id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
     	if (search_type == 'iterative'):
-    		id = IterativeDeepening(int(starting_value), int(target_value), operations_parsed)
     		erik = id.id_search()
     	elif (search_type == 'greedy'):
-    		id = GreedyBestFirst(int(starting_value), int(target_value), operations_parsed)
     		erik = id.gbf_search()
     	end_time = time.time()
     	print ('DONE')
