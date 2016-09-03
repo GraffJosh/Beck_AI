@@ -63,6 +63,7 @@ class GreedyBestFirst:
 					if(h1 < h2):
 						new_list.append(node)
 						break
+		self.OPEN = new_list
 
 class IterativeDeepening:
 	def __init__(self, start, goal, operations_list):
