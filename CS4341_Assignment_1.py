@@ -2,8 +2,10 @@
 from __future__ import with_statement # Required in 2.5
 import signal
 from contextlib import contextmanager
+from sys import argv
 import time
 import itertools
+
 
 def summation(a,b):
 	return a+b
@@ -21,10 +23,10 @@ def power(a,b):
 	return a**b
 
 math_func = {'+' : summation,
-           '-' : difference,
-           '*' : multiply,
-           '/' : quotient,
-           '^' : power,
+		   '-' : difference,
+		   '*' : multiply,
+		   '/' : quotient,
+		   '^' : power,
 }
 
 solution_path = []
@@ -135,39 +137,57 @@ class TimeoutException(Exception): pass
 
 @contextmanager
 def time_limit_manager(seconds):
-    def signal_handler(signum, frame):
-        raise TimeoutException
-    signal.signal(signal.SIGALRM, signal_handler)
-    signal.alarm(seconds)
-    try:
-        yield
-    finally:
-        signal.alarm(0)
+	def signal_handler(signum, frame):
+		raise TimeoutException
+	signal.signal(signal.SIGALRM, signal_handler)
+	signal.alarm(seconds)
+	try:
+		yield
+	finally:
+		signal.alarm(0)
 
-search_type = input('Search type? (iterative, greedy): ')
-starting_value = input('Starting value?: ')
-target_value = input('Target_Value?: ')
-time_limit = input('Time limit? (seconds): ')
-operations = input('Operations? (separate by spaces): ')
-operations_parsed = parse_operations(operations)
+for filename in argv[1:]:
+	if len(argv) > 1 :
+		args = []
+		with open(filename) as f:
+			for line in f:
+				args.append(line.strip())
+		if len(args) == 5:
+			search_type = args[0]
+			starting_value = float(args[1])
+			target_value = float(args[2])
+			time_limit = float(args[3])
+			operations = args[4]
+			operations_parsed = parse_operations(operations)
+		else:
+			print ("not enough arguments in file")
+			exit(0)
+
+	else:
+		search_type = input('Search type? (iterative, greedy): ')
+		starting_value = input('Starting value?: ')
+		target_value = input('Target_Value?: ')
+		time_limit = input('Time limit? (seconds): ')
+		operations = input('Operations? (separate by spaces): ')
+		operations_parsed = parse_operations(operations)
 
 
-# print (search_type +'\n'+starting_value+'\n'+target_value+'\n'+time_limit+'\n'+ operations_parsed[0]+'\n'+operations_parsed[1]+'\n'+operations_parsed[2])
-try:
-    with time_limit_manager(int(time_limit)):
-    	start_time = time.time()
-    	id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
-    	if (search_type == 'iterative'):
-    		erik = id.id_search()
-    	elif (search_type == 'greedy'):
-    		erik = id.gbf_search()
-    	end_time = time.time()
-    	print ('DONE')
-    	erik.backtrackNode()
-    	execution_time = str(end_time - start_time)
-    	print ('Number of steps required: ' + str(len(solution_path)))
-    	print ('Search required: ' + execution_time + ' seconds')
-    	print ('Nodes expanded: ' + str(id.num_nodesexpanded))
-    	print ('Maximum depth: ' + str(len(solution_path)))
-except TimeoutException:
-    print ('Timed out!')
+	# print (search_type +'\n'+starting_value+'\n'+target_value+'\n'+time_limit+'\n'+ operations_parsed[0]+'\n'+operations_parsed[1]+'\n'+operations_parsed[2])
+	try:
+		with time_limit_manager(int(time_limit)):
+			start_time = time.time()
+			id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
+			if (search_type == 'iterative'):
+				erik = id.id_search()
+			elif (search_type == 'greedy'):
+				erik = id.gbf_search()
+			end_time = time.time()
+			print ('DONE')
+			erik.backtrackNode()
+			execution_time = str(end_time - start_time)
+			print ('Number of steps required: ' + str(len(solution_path)))
+			print ('Search required: ' + execution_time + ' seconds')
+			print ('Nodes expanded: ' + str(id.num_nodesexpanded))
+			print ('Maximum depth: ' + str(len(solution_path)))
+	except TimeoutException:
+		print ('Timed out!')
