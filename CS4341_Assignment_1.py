@@ -157,9 +157,7 @@ _iterArg =iter(argv)
 if len(argv) > 1:
 	_iterArg =iter(argv)
 	next(_iterArg)
-	w, h = len(argv)-1,4
-else:
-	w, h = 1,4
+w, h = 1,4
 iterative_results = [[0 for x in range(w)] for y in range(h)] 
 greedy_results = [[0 for x in range(w)] for y in range(h)] 
 #the zero these place in the first index must be accounted for in the avg
@@ -236,22 +234,17 @@ if len(argv) > 1:
 	#Average and print cumulative results
 	for result in iterative_results:
 		sigma = float(0)
-		count = 0
 		for value in result:
 			sigma = sigma + value
-			count = count + 1
 		if len(result) > 1:
-			result[0] = sigma / count #average the results and store in index 0 (-1 accounts for preceeding 0)
+			result[0] = sigma / (len(result)-1) #average the results and store in index 0 (-1 accounts for preceeding 0)
 			#iterative_results[n][x] retains the initial result as well. There happens to be a blank start.
 	for result in greedy_results:
 		sigma = float(0)
-		count = 0
 		for value in result:
 			sigma = sigma + value
-			count = count + 1
-			print (count)
 		if len(result) > 1:
-			result[0] = sigma / count #average the results and store in index 0 (-1 accounts for preceeding 0)
+			result[0] = sigma / (len(result)-1) #average the results and store in index 0 (-1 accounts for preceeding 0)
 
 	print ('\nAverage execution time '+ 'Iterative: '+str(iterative_results[0][0])+', Greedy: '+str(greedy_results[0][0]))
 	print ('Average nodes expanded '+ 'Iterative: '+str(iterative_results[1][0])+', Greedy: '+str(greedy_results[1][0]))
