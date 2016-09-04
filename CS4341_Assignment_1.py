@@ -29,6 +29,7 @@ math_func = {'+' : summation,
 }
 
 solution_path = []
+bestNode = None
 
 class SearchAlgorithm:
 	def __init__(self, start, goal, operations_list):
@@ -41,6 +42,7 @@ class SearchAlgorithm:
 		self.CLOSED = []
 		self.depth = 0
 		self.max_depth = 0
+		self.best_node = self.current_node
 
 	def dl_search(self, node, depth):
 		if (depth == 0) and (node.value == self.goal):
@@ -52,6 +54,8 @@ class SearchAlgorithm:
 			for child in node.children:
 				self.num_nodesexpanded += 1
 				self.current_node = child
+				if (abs(self.current_node.value - self.goal) < abs(self.best_node.value - self.goal)):
+					self.best_node = self.current_node
 				#print (child.value)
 				found = self.dl_search(child, depth-1)
 				if found:
@@ -61,9 +65,12 @@ class SearchAlgorithm:
 	def id_search(self):
 		depth = 0
 		#print ('GOT HERE')
+		global bestNode
+		bestNode = self.best_node
 		while self.current_node.value != self.goal:
 			#print (depth)
 			if self.dl_search(self.start_node, depth):
+				self.best_node = self.current_node
 				return self.current_node
 			else:
 				depth += 1
@@ -176,6 +183,7 @@ greedy_results = [[0 for x in range(w)] for y in range(h)]
 
 
 for filename in _iterArg:
+	global bestNode
 	if len(argv) > 1 :
 		args = []
 		with open(filename) as f:
@@ -238,8 +246,12 @@ for filename in _iterArg:
 		print ('Timed out!')
 		if (search_type == 'iterative'):
 				iterative_results[3][0] = iterative_results[3][0]+1
+				bestNode = id.best_node
+				bestNode.backtrackNode()
 		elif (search_type == 'greedy'):
 				greedy_results[3][0] = greedy_results[3][0]+1
+				bestNode = id.best_node
+				bestNode.backtrackNode()
 	
 
 
