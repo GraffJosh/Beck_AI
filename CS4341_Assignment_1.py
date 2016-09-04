@@ -166,11 +166,7 @@ def time_limit_manager(seconds):
 		yield
 	finally:
 		signal.alarm(0)
-
-w, h = len(argv)-1,4
-iterative_results = [[0 for x in range(w)] for y in range(h)] 
-greedy_results = [[0 for x in range(w)] for y in range(h)] 
-#the zero these place in the first index must be accounted for in the avg
+		
 
 _iterArg =iter(argv)
 if len(argv) > 1:
@@ -242,8 +238,8 @@ for filename in _iterArg:
 				greedy_results[0].append(float(execution_time)) #store execution time
 				greedy_results[1].append(id.num_nodesexpanded)#store num expanded
 				greedy_results[2].append(curr_max_depth)#store maximum depth
-	except TimeoutException:
-		print ('Timed out!')
+	except (TimeoutException, RuntimeError) as error:
+		print ('Timed Out: ' + str(error.args))
 		if (search_type == 'iterative'):
 				iterative_results[3][0] = iterative_results[3][0]+1
 				bestNode = id.best_node
