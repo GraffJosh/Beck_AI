@@ -96,6 +96,18 @@ class SearchAlgorithm:
 						break
 		self.OPEN = new_list
 
+	def findMaxDepth(self):
+		global solution_path
+		for node in self.CLOSED:
+				solution_path = []
+				node.backtrackNode()
+				if solution_path:
+					current_depth = len(solution_path)+1 #total number of parents for selected node
+					if(self.max_depth < current_depth):
+						self.max_depth = current_depth
+		print (self.max_depth)
+		return self.max_depth
+
 class Operation:
 	def __init__(self, operator, integer):
 		self.operator = operator
@@ -208,10 +220,11 @@ for filename in _iterArg:
 			print ('DONE')
 			erik.backtrackNode()
 			execution_time = str(end_time - start_time)
+			curr_max_depth =id.findMaxDepth()
 			print ('Number of steps required: ' + str(len(solution_path)))
 			print ('Search required: ' + execution_time + ' seconds')
 			print ('Nodes expanded: ' + str(id.num_nodesexpanded))
-			print ('Maximum depth: ' + str(id.max_depth))
+			print ('Maximum depth: ' + str(curr_max_depth))
 
 			if (search_type == 'iterative'):
 				iterative_results[0].append(float(execution_time)) #store execution time
@@ -220,7 +233,7 @@ for filename in _iterArg:
 			elif (search_type == 'greedy'):
 				greedy_results[0].append(float(execution_time)) #store execution time
 				greedy_results[1].append(id.num_nodesexpanded)#store num expanded
-				greedy_results[2].append(len(solution_path))#store maximum depth
+				greedy_results[2].append(curr_max_depth)#store maximum depth
 	except TimeoutException:
 		print ('Timed out!')
 		if (search_type == 'iterative'):
