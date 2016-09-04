@@ -3,6 +3,7 @@ from __future__ import with_statement # Required in 2.5
 import signal
 from contextlib import contextmanager
 from sys import argv
+import sys
 import time
 import itertools
 
@@ -80,6 +81,8 @@ class SearchAlgorithm:
 	def gbf_search(self):
 		while(self.current_node.value != self.goal):
 			self.current_node.createChildren(self.operations_list)
+			if (abs(self.current_node.value - self.goal) < abs(self.best_node.value - self.goal)):
+				self.best_node = self.current_node
 			self.num_nodesexpanded += 1
 			self.CLOSED.append(self.current_node)
 			for child in self.current_node.children:
@@ -177,7 +180,7 @@ iterative_results = [[0 for x in range(w)] for y in range(h)]
 greedy_results = [[0 for x in range(w)] for y in range(h)] 
 #the zero these place in the first index must be accounted for in the avg
 
-
+sys.setrecursionlimit(10000)
 for filename in _iterArg:
 	global bestNode
 	if len(argv) > 1 :
