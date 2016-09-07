@@ -143,9 +143,18 @@ class Node:
 		if (self.parent is None):
 			return solution_path.reverse()
 		if not (self.parent is None):
-			print (str(self.parent.value) + ' ' + self.operation.operator + ' ' + str(self.operation.integer) + ' = ' + str(self.value))
+			#print (str(self.parent.value) + ' ' + self.operation.operator + ' ' + str(self.operation.integer) + ' = ' + str(self.value))
 			solution_path.append(self.parent)
 			self.parent.backtrackNode()
+
+	def backtrackNode2(self, solution_nodes):
+		if (self.parent is None):
+			return solution_path.reverse()
+		if not (self.parent is None):
+			print (str(self.parent.value) + ' ' + self.operation.operator + ' ' + str(self.operation.integer) + ' = ' + str(self.value))
+			solution_path.append(self.parent)
+			self.parent.backtrackNode2(solution_path)
+
 
 
 def parse_operations(strlist):
@@ -215,7 +224,6 @@ for filename in _iterArg:
 			id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
 			id.num_nodesexpanded = 0
 			id.depth = 0
-			id.solution_path = []
 			solution_path = []
 
 
@@ -225,7 +233,7 @@ for filename in _iterArg:
 				erik = id.gbf_search()
 			end_time = time.time()
 			print ('DONE')
-			erik.backtrackNode()
+			erik.backtrackNode2(solution_path)
 			execution_time = str(end_time - start_time)
 			curr_max_depth =id.findMaxDepth()
 			print ('Number of steps required: ' + str(len(solution_path)))
@@ -246,11 +254,11 @@ for filename in _iterArg:
 		if (search_type == 'iterative'):
 				iterative_results[3][0] = iterative_results[3][0]+1
 				bestNode = id.best_node
-				bestNode.backtrackNode()
+				bestNode.backtrackNode2(solution_path)
 		elif (search_type == 'greedy'):
 				greedy_results[3][0] = greedy_results[3][0]+1
 				bestNode = id.best_node
-				bestNode.backtrackNode()
+				bestNode.backtrackNode2(solution_path)
 	
 
 
