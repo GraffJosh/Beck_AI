@@ -115,7 +115,7 @@ class SearchAlgorithm:
 					current_depth = len(solution_path)+1 #total number of parents for selected node
 					if(self.max_depth < current_depth):
 						self.max_depth = current_depth
-		print (self.max_depth)
+		#print (self.max_depth)
 		return self.max_depth
 
 class Operation:
