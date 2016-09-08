@@ -192,8 +192,8 @@ greedy_results = [[0 for x in range(w)] for y in range(h)]
 
 with open('data.csv', 'a') as csvfile:
 				datawriter = csv.writer(csvfile, delimiter = ',', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
-				datawriter.writerow(['type', 'time', 'nodes expanded', 'maximum depth', 'steps', 'operations'])
-				
+				datawriter.writerow(['type', 'time', 'nodes-expanded', 'maximum-depth', 'steps', 'starting-value', 'target-value', 'operations'])
+
 sys.setrecursionlimit(10000)
 for filename in _iterArg:
 	global bestNode
@@ -249,8 +249,7 @@ for filename in _iterArg:
 			print ('Maximum depth: ' + str(curr_max_depth))
 			with open('data.csv', 'a') as csvfile:
 				datawriter = csv.writer(csvfile, delimiter = ',', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
-				datawriter.writerow([search_type, execution_time, str(id.num_nodesexpanded), str(curr_max_depth), str(len(solution_path)), operations])
-
+				datawriter.writerow([search_type, execution_time, str(id.num_nodesexpanded), str(curr_max_depth), str(len(solution_path)), starting_value, target_value, operations])
 			if (search_type == 'iterative'):
 				iterative_results[0].append(float(execution_time)) #store execution time
 				iterative_results[1].append(id.num_nodesexpanded)#store num expanded
@@ -261,6 +260,9 @@ for filename in _iterArg:
 				greedy_results[2].append(curr_max_depth)#store maximum depth
 	except (TimeoutException, RuntimeError) as error:
 		print ('Timed Out: ' + str(error.args))
+		with open('data.csv', 'a') as csvfile:
+				datawriter = csv.writer(csvfile, delimiter = ',', quotechar=' ', quoting=csv.QUOTE_MINIMAL)
+				datawriter.writerow([search_type, "timeout!", "timeout!", "timeout!", "timeout!", starting_value, target_value, operations])
 		if (search_type == 'iterative'):
 				iterative_results[3][0] = iterative_results[3][0]+1
 				bestNode = id.best_node
