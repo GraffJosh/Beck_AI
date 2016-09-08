@@ -202,7 +202,11 @@ for filename in _iterArg:
 			starting_value = float(args[1])
 			target_value = float(args[2])
 			time_limit = float(args[3])
-			operations = args[4]
+			n = 4
+			operations = []
+			while n < len(args):
+				operations.append(args[n])
+				n = n+1
 			operations_parsed = parse_operations(operations)
 		else:
 			print ("not enough arguments in file")
