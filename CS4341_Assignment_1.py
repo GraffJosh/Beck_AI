@@ -254,6 +254,7 @@ for filename in _iterArg:
 				greedy_results[1].append(id.num_nodesexpanded)#store num expanded
 				greedy_results[2].append(curr_max_depth)#store maximum depth
 	except (TimeoutException, RuntimeError) as error:
+		end_time = time.time()
 		print ('Timed Out: ' + str(error.args))
 		if (search_type == 'iterative'):
 				iterative_results[3][0] = iterative_results[3][0]+1
@@ -263,6 +264,13 @@ for filename in _iterArg:
 				greedy_results[3][0] = greedy_results[3][0]+1
 				bestNode = id.best_node
 				bestNode.backtrackNode2(solution_path)
+		execution_time = str(end_time - start_time)
+		curr_max_depth =id.findMaxDepth()
+		print ('\n\n' + search_type)
+		print ('Number of steps required: ' + str(len(solution_path)))
+		print ('Search required: ' + execution_time + ' seconds')
+		print ('Nodes expanded: ' + str(id.num_nodesexpanded))
+		print ('Maximum depth: ' + str(curr_max_depth))
 	
 
 
