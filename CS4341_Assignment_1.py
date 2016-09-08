@@ -158,7 +158,7 @@ class Node:
 
 
 def parse_operations(strlist):
-	string_arr = strlist.split()
+	string_arr = strlist
 	operations_list = []
 	for string in string_arr:
 		letter_arr = list(string)
@@ -203,11 +203,11 @@ for filename in _iterArg:
 			target_value = float(args[2])
 			time_limit = float(args[3])
 			n = 4
-			operations = []
+			operations_parsed = []
 			while n < len(args):
-				operations.append(args[n])
+				print (args[n][1:])
+				operations_parsed.append(Operation(args[n][:1],int(args[n][1:])))
 				n = n+1
-			operations_parsed = parse_operations(operations)
 		else:
 			print ("not enough arguments in file")
 			exit(0)
