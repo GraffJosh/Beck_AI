@@ -18,7 +18,9 @@ greedy
 5
 100
 2.5
-+1 -1 -1
++1
+-1
+-1
 
 
 Append the python3 call with as many input filenames as is required.
