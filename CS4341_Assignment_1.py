@@ -115,7 +115,7 @@ class SearchAlgorithm:
 					current_depth = len(solution_path)+1 #total number of parents for selected node
 					if(self.max_depth < current_depth):
 						self.max_depth = current_depth
-		print (self.max_depth)
+		#print (self.max_depth)
 		return self.max_depth
 
 class Operation:
@@ -232,10 +232,11 @@ for filename in _iterArg:
 			elif (search_type == 'greedy'):
 				erik = id.gbf_search()
 			end_time = time.time()
-			print ('DONE')
+			print ('\nDONE')
 			erik.backtrackNode2(solution_path)
 			execution_time = str(end_time - start_time)
 			curr_max_depth =id.findMaxDepth()
+			print ('\n\n' + search_type)
 			print ('Number of steps required: ' + str(len(solution_path)))
 			print ('Search required: ' + execution_time + ' seconds')
 			print ('Nodes expanded: ' + str(id.num_nodesexpanded))
