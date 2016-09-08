@@ -197,7 +197,7 @@ for filename in _iterArg:
 		with open(filename) as f:
 			for line in f:
 				args.append(line.strip())
-		if len(args) == 5:
+		if len(args) > 4:
 			search_type = args[0]
 			starting_value = float(args[1])
 			target_value = float(args[2])
@@ -205,7 +205,6 @@ for filename in _iterArg:
 			n = 4
 			operations_parsed = []
 			while n < len(args):
-				print (args[n][1:])
 				operations_parsed.append(Operation(args[n][:1],int(args[n][1:])))
 				n = n+1
 		else:
