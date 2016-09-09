@@ -29,8 +29,6 @@ math_func = {'+' : summation,
 		   '^' : power,
 }
 
-bestNode = None
-
 class SearchAlgorithm:
 	def __init__(self, start, goal, operations_list, solution_path):
 		self.start_node = Node(None, None, int(start))
@@ -66,8 +64,6 @@ class SearchAlgorithm:
 	def id_search(self):
 		depth = 0
 		#print ('GOT HERE')
-		global bestNode
-		bestNode = self.best_node
 		while self.current_node.value != self.goal:
 			#print (depth)
 			if self.dl_search(self.start_node, depth):
@@ -190,7 +186,6 @@ greedy_results = [[0 for x in range(w)] for y in range(h)]
 
 sys.setrecursionlimit(10000)
 for filename in _iterArg:
-	global bestNode
 	if len(argv) > 1 :
 		args = []
 		with open(filename) as f:
@@ -258,12 +253,10 @@ for filename in _iterArg:
 		print ('Timed Out: ' + str(error.args))
 		if (search_type == 'iterative'):
 				iterative_results[3][0] = iterative_results[3][0]+1
-				bestNode = id.best_node
-				bestNode.backtrackNode2(id.solution_path)
+				id.best_node.backtrackNode2(id.solution_path)
 		elif (search_type == 'greedy'):
 				greedy_results[3][0] = greedy_results[3][0]+1
-				bestNode = id.best_node
-				bestNode.backtrackNode2(id.solution_path)
+				id.best_node.backtrackNode2(id.solution_path)
 		execution_time = str(end_time - start_time)
 		curr_max_depth =id.findMaxDepth()
 		print ('\n\n' + search_type)
