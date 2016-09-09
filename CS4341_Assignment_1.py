@@ -29,11 +29,10 @@ math_func = {'+' : summation,
 		   '^' : power,
 }
 
-solution_path = []
 bestNode = None
 
 class SearchAlgorithm:
-	def __init__(self, start, goal, operations_list):
+	def __init__(self, start, goal, operations_list, solution_path):
 		self.start_node = Node(None, None, int(start))
 		self.current_node = self.start_node
 		self.goal = goal
@@ -44,6 +43,7 @@ class SearchAlgorithm:
 		self.depth = 0
 		self.max_depth = 0
 		self.best_node = self.current_node
+		self.solution_path = solution_path
 
 	def dl_search(self, node, depth):
 		if (depth == 0) and (node.value == self.goal):
@@ -90,6 +90,7 @@ class SearchAlgorithm:
 					self.OPEN.append(child)
 					self.reorderOpen()
 			self.current_node = self.OPEN.pop(0)
+		self.best_node = self.current_node
 		return self.current_node
 
 	def reorderOpen(self):
@@ -107,12 +108,11 @@ class SearchAlgorithm:
 		self.OPEN = new_list
 
 	def findMaxDepth(self):
-		global solution_path
 		for node in self.CLOSED:
-				solution_path = []
-				node.backtrackNode()
-				if solution_path:
-					current_depth = len(solution_path)+1 #total number of parents for selected node
+				self.solution_path = []
+				node.backtrackNode(self.solution_path)
+				if self.solution_path:
+					current_depth = len(self.solution_path)+1 #total number of parents for selected node
 					if(self.max_depth < current_depth):
 						self.max_depth = current_depth
 		#print (self.max_depth)
@@ -138,16 +138,15 @@ class Node:
 	def evalChildValue(self, operation):
 		return math_func[operation.operator](self.value, operation.integer)
 
-	def backtrackNode(self):
-		global solution_path
+	def backtrackNode(self, solution_path):
 		if (self.parent is None):
 			return solution_path.reverse()
 		if not (self.parent is None):
 			#print (str(self.parent.value) + ' ' + self.operation.operator + ' ' + str(self.operation.integer) + ' = ' + str(self.value))
 			solution_path.append(self.parent)
-			self.parent.backtrackNode()
+			self.parent.backtrackNode(solution_path)
 
-	def backtrackNode2(self, solution_nodes):
+	def backtrackNode2(self, solution_path):
 		if (self.parent is None):
 			return solution_path.reverse()
 		if not (self.parent is None):
@@ -224,10 +223,10 @@ for filename in _iterArg:
 	try:
 		with time_limit_manager(int(time_limit)):
 			start_time = time.time()
-			id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
+			solution_path = []
+			id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed, solution_path)
 			id.num_nodesexpanded = 0
 			id.depth = 0
-			solution_path = []
 
 
 			if (search_type == 'iterative'):
@@ -236,12 +235,12 @@ for filename in _iterArg:
 				erik = id.gbf_search()
 			end_time = time.time()
 			print ('\nDONE')
-			erik.backtrackNode2(solution_path)
+			erik.backtrackNode2(id.solution_path)
 			execution_time = str(end_time - start_time)
 			curr_max_depth =id.findMaxDepth()
 			print ('\n\n' + search_type)
 			print ('error: '+ str(abs(id.best_node.value - target_value)))
-			print ('Number of steps required: ' + str(len(solution_path)))
+			print ('Number of steps required: ' + str(len(id.solution_path)))
 			print ('Search required: ' + execution_time + ' seconds')
 			print ('Nodes expanded: ' + str(id.num_nodesexpanded))
 			print ('Maximum depth: ' + str(curr_max_depth))
@@ -249,7 +248,7 @@ for filename in _iterArg:
 			if (search_type == 'iterative'):
 				iterative_results[0].append(float(execution_time)) #store execution time
 				iterative_results[1].append(id.num_nodesexpanded)#store num expanded
-				iterative_results[2].append(len(solution_path))#store maximum depth
+				iterative_results[2].append(len(id.solution_path))#store maximum depth
 			elif (search_type == 'greedy'):
 				greedy_results[0].append(float(execution_time)) #store execution time
 				greedy_results[1].append(id.num_nodesexpanded)#store num expanded
@@ -260,16 +259,16 @@ for filename in _iterArg:
 		if (search_type == 'iterative'):
 				iterative_results[3][0] = iterative_results[3][0]+1
 				bestNode = id.best_node
-				bestNode.backtrackNode2(solution_path)
+				bestNode.backtrackNode2(id.solution_path)
 		elif (search_type == 'greedy'):
 				greedy_results[3][0] = greedy_results[3][0]+1
 				bestNode = id.best_node
-				bestNode.backtrackNode2(solution_path)
+				bestNode.backtrackNode2(id.solution_path)
 		execution_time = str(end_time - start_time)
 		curr_max_depth =id.findMaxDepth()
 		print ('\n\n' + search_type)
 		print ('error: '+ str(abs(id.best_node.value - target_value)))
-		print ('Number of steps required: ' + str(len(solution_path)))
+		print ('Number of steps required: ' + str(len(id.solution_path)))
 		print ('Search required: ' + execution_time + ' seconds')
 		print ('Nodes expanded: ' + str(id.num_nodesexpanded))
 		print ('Maximum depth: ' + str(curr_max_depth))
