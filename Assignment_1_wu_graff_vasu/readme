@@ -28,6 +28,6 @@ Execution example:
 	:~/$ python3 CS4341_Assignment_1.py testfile1
 	:~/$ python3 CS4341_Assignment_1.py testfile1 testfile2
 
-Manual input
+Manual input (NOT WORKING, BUT FILE INPUT DOES)
 Simply follow the onscreen prompts after the following execution.
 :~/$ python3 CS4341_Assignment_1.py
