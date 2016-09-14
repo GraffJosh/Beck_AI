@@ -48,58 +48,13 @@ class SearchAlgorithm:
 		self.best_node = self.current_node
 		self.solution_path = []
 
-	#Normal depth limited; returns True is found
-	def dl_search(self, node, depth):
-		if (depth == 0) and (node.value == self.goal):
-			return True
-		elif (node.value == self.goal):
-			return True
-		elif (depth > 0):
-			node.createChildren(self.operations_list)
-			self.num_nodesexpanded += len(self.operations_list)
-			for child in node.children:
-				self.current_node = child
-				if (abs(self.current_node.value - self.goal) < abs(self.best_node.value - self.goal)):
-					self.best_node = self.current_node
-				if (child.depth > self.max_depth):
-					self.max_depth = child.depth
-				#print (child.value)
-				found = self.dl_search(child, depth-1)
-				if found:
-					return True
-		return False
-	#Iterative Deepening using depth first increasing depth each time
-	def id_search(self):
-		depth = 0
-		#print ('GOT HERE')
-		while self.current_node.value != self.goal:
-			#print (depth)
-			if self.dl_search(self.start_node, depth):
-				return self.current_node
-			else:
-				depth += 1
-
-	#Greedy Best First Search using OPEN and CLOSED node lists
-	def gbf_search(self):
-		while(self.current_node.value != self.goal):
-			self.current_node.createChildren(self.operations_list)
-			self.num_nodesexpanded += len(self.operations_list)
-			if (abs(self.current_node.value - self.goal) < abs(self.best_node.value - self.goal)):
-				self.best_node = self.current_node
-			self.CLOSED.append(self.current_node)
-			for child in self.current_node.children:
-				if (child.depth > self.max_depth):
-					self.max_depth = child.depth
-				if(child not in self.OPEN) and (child not in self.CLOSED):
-					self.OPEN.append(child)
-					self.reorderOpen()
-			self.current_node = self.OPEN.pop(0)
-		self.best_node = self.current_node
-		return self.best_node
 
 	#Reorders the open list according to our heuristic function
 	def reorderOpen(self):
 		self.OPEN.sort(key=lambda x: abs(self.goal - x.value))
+
+	def genetic_search(self):
+		return best_node
 
 #Operation class holding an operator and integer from file input
 class Operation:
@@ -188,8 +143,7 @@ if len(argv) > 1:
 	_iterArg =iter(argv)
 	next(_iterArg)
 w, h = 1,4
-iterative_results = [[0 for x in range(w)] for y in range(h)] 
-greedy_results = [[0 for x in range(w)] for y in range(h)] 
+genetic_results = [[0 for x in range(w)] for y in range(h)] 
 #the zero these place in the first index must be accounted for in the avg
 
 #Limit the recursion limit
@@ -216,7 +170,7 @@ for filename in _iterArg:
 
 	# else:
 	# 	# Manual Input
-	# 	search_type = input('Search type? (iterative, greedy): ')
+	# 	search_type = input('Search type? (iterative, genetic): ')
 	# 	starting_value = float(input('Starting value?: '))
 	# 	target_value = float(input('Target_Value?: '))
 	# 	time_limit = float(input('Time limit? (seconds): '))
@@ -231,34 +185,26 @@ for filename in _iterArg:
 			id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
 
 			# ERIK IS OUR SOLUTION NODE
-			if (search_type == 'iterative'):
-				erik = id.id_search()
-			elif (search_type == 'greedy'):
-				erik = id.gbf_search()
+			if (search_type == 'genetic'):
+				erik = id.genetic_search()
 			end_time = time.time()
 			print ('\nFOUND SOLUTION')
 
 			erik.printSolution(id.solution_path)
 			execution_time = str(end_time - start_time)
 			printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
-				execution_time, str(id.num_nodesexpanded), str(id.max_depth))
+			execution_time, str(id.num_nodesexpanded), str(id.max_depth))
 
-			if (search_type == 'iterative'):
-				iterative_results[0].append(float(execution_time)) #store execution time
-				iterative_results[1].append(id.num_nodesexpanded)#store num expanded
-				iterative_results[2].append(len(id.solution_path))#store maximum depth
-			elif (search_type == 'greedy'):
-				greedy_results[0].append(float(execution_time)) #store execution time
-				greedy_results[1].append(id.num_nodesexpanded)#store num expanded
-				greedy_results[2].append(id.max_depth)#store maximum depth
+			if (search_type == 'genetic'):
+				genetic_results[0].append(float(execution_time)) #store execution time
+				genetic_results[1].append(id.num_nodesexpanded)#store num expanded
+				genetic_results[2].append(id.max_depth)#store maximum depth
+
 	except (TimeoutException, RuntimeError) as error:
 		end_time = time.time()
 		print ('Could not find solution\nTimed Out: ' + str(error.args))
-		if (search_type == 'iterative'):
-				iterative_results[3][0] = iterative_results[3][0]+1
-				id.best_node.printSolution(id.solution_path)
-		elif (search_type == 'greedy'):
-				greedy_results[3][0] = greedy_results[3][0]+1
+		if (search_type == 'genetic'):
+				genetic_results[3][0] = genetic_results[3][0]+1
 				id.best_node.printSolution(id.solution_path)
 		execution_time = str(end_time - start_time)
 		printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
