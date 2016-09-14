@@ -1,0 +1,33 @@
+CS 4341 Assignment 1
+Basic search algorithms
+Purpose
+This application finds the minimum number of given numeric operators to compute a given endpoint from a given startpoint. 
+
+Usage
+There are two ways to use this application, using a file input or using manual input.
+File input
+Input files should be formatted as follows:
+	Search Type -- ‘greedy’ or ‘iterative’
+	Starting value -- truncated to integer
+	Ending value -- truncated to integer
+	Time limit -- float values accepted
+	Acceptable operators -- operator followed by integer. Separated by spaces.
+
+Testfile example:
+greedy
+5
+100
+2.5
++1
+-1
+-1
+
+
+Append the python3 call with as many input filenames as is required.
+Execution example:
+	:~/$ python3 CS4341_Assignment_1.py testfile1
+	:~/$ python3 CS4341_Assignment_1.py testfile1 testfile2
+
+Manual input (NOT WORKING, BUT FILE INPUT DOES)
+Simply follow the onscreen prompts after the following execution.
+:~/$ python3 CS4341_Assignment_1.py
