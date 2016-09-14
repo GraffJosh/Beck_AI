@@ -6,6 +6,7 @@ from sys import argv
 import sys
 import time
 import itertools
+import random
 
 #Instead of using numpy arithmetic functions, just made some functions to use
 
@@ -36,25 +37,40 @@ math_func = {'+' : summation,
 #Algorithm Search Class for each type
 class SearchAlgorithm:
 	def __init__(self, start, goal, operations_list):
-		self.start_node = Node(None, None, int(start))
-		self.current_node = self.start_node
+		#self.start_node = Node(None, None, int(start))
+		#self.current_node = self.start_node
 		self.goal = goal
 		self.operations_list = operations_list
 		self.num_nodesexpanded = 1
-		self.OPEN = []
-		self.CLOSED = []
 		self.depth = 0
-		self.max_depth = 0
-		self.best_node = self.current_node
-		self.solution_path = []
+		#self.best_node = self.current_node
+		self.zoo = []
+
 
 
 	#Reorders the open list according to our heuristic function
 	def reorderOpen(self):
 		self.OPEN.sort(key=lambda x: abs(self.goal - x.value))
 
+
+	def init_operations(self):
+		num_nodes = 50 			#number of nodes in a zoo
+		num_operations = 30		#number of operators per node
+		op_array = []
+		for node_num in range(num_nodes):
+			#appends to the zoo an initialized node.
+			for op_num in range(num_operations):
+				#appends to op_array a random operator from our pool
+				random.shuffle(self.operations_list)
+				op_array.append(self.operations_list[1])
+			self.zoo.append(Node(op_array))
+
+
 	def genetic_search(self):
-		return best_node
+		self.init_operations()
+		#holy shit do we need a better way to notate this.
+		print (self.zoo[1].operations[1].operator)
+
 
 #Operation class holding an operator and integer from file input
 class Operation:
@@ -64,35 +80,25 @@ class Operation:
 
 #Basic Node class that contains info about its value, the operation it took to get there, and its parents/children
 class Node:
-	def __init__(self, parent, operation, value):
-		self.parent = parent
-		self.operation = operation
-		self.value = value
-		self.children = []
-		#keep track of depth
-		if(parent is None):
-			self.depth = 0
-		else:
-			self.depth = parent.depth + 1
+		#determine the node's value
 
-	#Create the children nodes
-	def createChildren(self, operations_list):
-		if not self.children:
-			for operation in operations_list:
-				self.children.append(Node(self,operation, self.evalChildValue(operation)))
+	def eval_node_val(self):
+		return 1
 
-	#Evaluates the value of the child
-	def evalChildValue(self, operation):
-		return math_func[operation.operator](self.value, operation.integer)
+	def eval_node_h(self):
+		return 1
 
-	#Traverses the ancestry of a particular node and returns a list of nodes (ancestry)
-	def backtrackNode(self, solution_path):
-		if (self.parent is None):
-			return solution_path.reverse()
-		if not (self.parent is None):
-			#print (str(self.parent.value) + ' ' + self.operation.operator + ' ' + str(self.operation.integer) + ' = ' + str(self.value))
-			solution_path.append(self.parent)
-			self.parent.backtrackNode(solution_path)
+	def __init__(self, operations):
+		self.value = self.eval_node_val()
+		self.operations = operations
+		self.heuristic = self.eval_node_h()
+
+
+
+
+
+
+
 
 	#Prints out the operations that it took to reach the solution
 	def printSolution(self, solution_path):
