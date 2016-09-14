@@ -1,0 +1,217 @@
+#CS4341 Assignment 1
+from __future__ import with_statement # Required in 2.5
+import signal
+from contextlib import contextmanager
+from sys import argv
+import sys
+import time
+import itertools
+import random
+
+#Instead of using numpy arithmetic functions, just made some functions to use
+
+def summation(a,b):
+	return a+b
+
+def difference(a,b):
+	return a-b
+
+def multiply(a,b):
+	return a*b
+
+def quotient(a,b):
+	return a/b
+
+def power(a,b):
+	return a**b
+
+#Here is our function switch case
+
+math_func = {'+' : summation,
+		   '-' : difference,
+		   '*' : multiply,
+		   '/' : quotient,
+		   '^' : power,
+}
+
+#Algorithm Search Class for each type
+class SearchAlgorithm:
+	def __init__(self, start, goal, operations_list):
+		#self.start_node = Node(None, None, int(start))
+		#self.current_node = self.start_node
+		self.goal = goal
+		self.operations_list = operations_list
+		self.num_nodesexpanded = 1
+		self.depth = 0
+		#self.best_node = self.current_node
+		self.zoo = []
+
+
+
+	#Reorders the open list according to our heuristic function
+	def reorderOpen(self):
+		self.OPEN.sort(key=lambda x: abs(self.goal - x.value))
+
+
+	def init_operations(self):
+		num_nodes = 50 			#number of nodes in a zoo
+		num_operations = 30		#number of operators per node
+		op_array = []
+		for node_num in range(num_nodes):
+			#appends to the zoo an initialized node.
+			for op_num in range(num_operations):
+				#appends to op_array a random operator from our pool
+				random.shuffle(self.operations_list)
+				op_array.append(self.operations_list[1])
+			self.zoo.append(Node(op_array))
+
+
+	def genetic_search(self):
+		self.init_operations()
+		#holy shit do we need a better way to notate this.
+		print (self.zoo[1].operations[1].operator)
+
+
+#Operation class holding an operator and integer from file input
+class Operation:
+	def __init__(self, operator, integer):
+		self.operator = operator
+		self.integer = integer
+
+#Basic Node class that contains info about its value, the operation it took to get there, and its parents/children
+class Node:
+		#determine the node's value
+
+	def eval_node_val(self):
+		return 1
+
+	def eval_node_h(self):
+		return 1
+
+	def __init__(self, operations):
+		self.value = self.eval_node_val()
+		self.operations = operations
+		self.heuristic = self.eval_node_h()
+
+
+
+
+
+
+
+
+	#Prints out the operations that it took to reach the solution
+	def printSolution(self, solution_path):
+		if (self.parent is None):
+			return
+		if not (self.parent is None):
+			print (str(self.parent.value) + ' ' + self.operation.operator + ' ' + str(self.operation.integer) + ' = ' + str(self.value))
+			solution_path.append(self.parent)
+			self.parent.printSolution(solution_path)
+
+#Breaks up a string into parameters to create an Operations object assuming first value is the operation
+#and the rest is the integer
+def parseOperations(strlist):
+	string_arr = strlist
+	operations_list = []
+	for string in string_arr:
+		letter_arr = list(string)
+		operations_list.append(Operation(letter_arr[0],int(''.join(letter_arr[1:]))))
+	return operations_list
+
+#Prints the stats
+def printStats(search_type, error, steps, time, nodes_expanded, max_depth):
+	print ('\n\n' + search_type)
+	print ('error: '+ error)
+	print ('Number of steps required: ' + steps)
+	print ('Search time required: ' + time + ' seconds')
+	print ('Nodes expanded: ' + nodes_expanded)
+	print ('Maximum depth: ' + max_depth)
+
+
+class TimeoutException(Exception): pass
+
+# Handles our time out, raise the exception and does something about it
+@contextmanager
+def time_limit_manager(seconds):
+	def signal_handler(signum, frame):
+		raise TimeoutException
+	signal.signal(signal.SIGALRM, signal_handler)
+	signal.alarm(seconds)
+	try:
+		yield
+	finally:
+		signal.alarm(0)
+		
+
+_iterArg =iter(argv)
+if len(argv) > 1:
+	_iterArg =iter(argv)
+	next(_iterArg)
+w, h = 1,4
+genetic_results = [[0 for x in range(w)] for y in range(h)] 
+#the zero these place in the first index must be accounted for in the avg
+
+#Limit the recursion limit
+sys.setrecursionlimit(10000)
+for filename in _iterArg:
+	if len(argv) > 1 :
+		args = []
+		with open(filename) as f:
+			for line in f:
+				args.append(line.strip())
+		if len(args) > 4:
+			search_type = args[0]
+			starting_value = float(args[1])
+			target_value = float(args[2])
+			time_limit = float(args[3])
+			n = 4
+			operations_parsed = []
+			while n < len(args):
+				operations_parsed.append(Operation(args[n][:1],int(args[n][1:])))
+				n = n+1
+		else:
+			print ("not enough arguments in file")
+			exit(0)
+
+	# else:
+	# 	# Manual Input
+	# 	search_type = input('Search type? (iterative, genetic): ')
+	# 	starting_value = float(input('Starting value?: '))
+	# 	target_value = float(input('Target_Value?: '))
+	# 	time_limit = float(input('Time limit? (seconds): '))
+	# 	operations = input('Operations? (separate by spaces): ')
+	# 	operations_parsed = parseOperations(operations)
+
+	
+	try:
+		with time_limit_manager(int(time_limit)):
+
+			start_time = time.time()
+			id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
+
+			# ERIK IS OUR SOLUTION NODE
+			if (search_type == 'genetic'):
+				erik = id.genetic_search()
+			end_time = time.time()
+			print ('\nFOUND SOLUTION')
+
+			erik.printSolution(id.solution_path)
+			execution_time = str(end_time - start_time)
+			printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
+			execution_time, str(id.num_nodesexpanded), str(id.max_depth))
+
+			if (search_type == 'genetic'):
+				genetic_results[0].append(float(execution_time)) #store execution time
+				genetic_results[1].append(id.num_nodesexpanded)#store num expanded
+				genetic_results[2].append(id.max_depth)#store maximum depth
+
+	except (TimeoutException, RuntimeError) as error:
+		end_time = time.time()
+		print ('Could not find solution\nTimed Out: ' + str(error.args))
+		if (search_type == 'genetic'):
+				genetic_results[3][0] = genetic_results[3][0]+1
+				id.best_node.printSolution(id.solution_path)
+		execution_time = str(end_time - start_time)
+		printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
+				execution_time, str(id.num_nodesexpanded), str(id.max_depth))
