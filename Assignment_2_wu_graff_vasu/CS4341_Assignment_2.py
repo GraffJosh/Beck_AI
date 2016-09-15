@@ -58,7 +58,7 @@ class SearchAlgorithm:
 
 	def init_operations(self):
 		num_nodes = 50 			# number of nodes in a zoo
-		num_operations = 10		# number of operators per node
+		num_operations = 30		# number of operators per node
 		
 
 		for node_num in range(num_nodes):
@@ -77,7 +77,7 @@ class SearchAlgorithm:
 		num_reproductions = 10
 
 		for num in range(num_reproductions):
-			self.zoo = self.genetic_search_recurse(self.zoo)
+			self.zoo = self.breed_population(self.zoo)
 
 		best_organism = self.zoo[0]
 
@@ -93,7 +93,7 @@ class SearchAlgorithm:
 
 		return best_organism
 
-	def genetic_search_recurse(self, zoo):
+	def breed_population(self, zoo):
 
 		new_zoo = [] # this is the new population
 		for organism in self.zoo:
