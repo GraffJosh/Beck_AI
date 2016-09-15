@@ -39,14 +39,14 @@ math_func = {'+' : summation,
 #Algorithm Search Class for each type
 class SearchAlgorithm:
 	def __init__(self, start, goal, operations_list):
-		#self.start_node = Node(None, None, int(start))
-		#self.current_node = self.start_node
+		self.start_node = Node(start,goal,operations_list)
+		self.current_node = self.start_node
 		self.start = start
 		self.goal = goal
 		self.operations_list = operations_list
 		self.num_nodesexpanded = 1
-		self.depth = 0
-		#self.best_node = self.current_node
+		self.generation = 0
+		self.best_node = self.current_node
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -74,27 +74,28 @@ class SearchAlgorithm:
 
 	def genetic_search(self):
 		self.init_operations()
-		num_reproductions = 10
+		num_reproductions = 1000
 
 		for num in range(num_reproductions):
 			self.zoo = self.genetic_search_recurse(self.zoo)
+			
 
-		best_organism = self.zoo[0]
+		self.best_node = self.zoo[0]
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
-				best_organism = organism
+				self.best_node = organism
 
-			if organism.eval_node_fitness() > best_organism.eval_node_fitness():
-				best_organism = organism
+			if organism.eval_node_fitness() > self.best_node.eval_node_fitness():
+				self.best_node = organism
 
-		#best_organism.printSolution()
-		#print(best_organism.eval_node_fitness())
+		#self.best_node.printSolution()
+		#print(self.best_node.eval_node_fitness())
 
-		return best_organism
+		return self.best_node
 
 	def genetic_search_recurse(self, zoo):
-
+		self.generation = self.generation+1
 		new_zoo = [] # this is the new population
 		for organism in self.zoo:
 
@@ -140,7 +141,11 @@ class Operation:
 class Node:
 		
 	def eval_node_val(self):
-		return 1
+		num = self.start
+
+		for operation in self.operations:
+			num = math_func[operation.operator](num, operation.integer)
+		return num
 
 	def eval_node_fitness(self):
 		num = self.start
@@ -179,13 +184,13 @@ def parseOperations(strlist):
 	return operations_list
 
 #Prints the stats
-def printStats(search_type, error, steps, time, nodes_expanded, max_depth):
+def printStats(search_type, error, steps, time, nodes_expanded, max_generation):
 	print ('\n\n' + search_type)
 	print ('error: '+ error)
 	print ('Number of steps required: ' + steps)
 	print ('Search time required: ' + time + ' seconds')
 	print ('Nodes expanded: ' + nodes_expanded)
-	print ('Maximum depth: ' + max_depth)
+	print ('Maximum generation: ' + max_generation)
 
 
 class TimeoutException(Exception): pass
@@ -227,7 +232,7 @@ for filename in _iterArg:
 			n = 4
 			operations_parsed = []
 			while n < len(args):
-				operations_parsed.append(Operation(args[n][:1],int(args[n][1:])))
+				operations_parsed.append(Operation(args[n][:1],float(args[n][1:])))
 				n = n+1
 		else:
 			print ("not enough arguments in file")
@@ -247,7 +252,7 @@ for filename in _iterArg:
 		with time_limit_manager(int(time_limit)):
 
 			start_time = time.time()
-			id = SearchAlgorithm(int(starting_value), int(target_value), operations_parsed)
+			id = SearchAlgorithm(float(starting_value), float(target_value), operations_parsed)
 
 			# ERIK IS OUR SOLUTION NODE
 			if (search_type == 'genetic'):
@@ -258,19 +263,19 @@ for filename in _iterArg:
 			erik.printSolution()
 			execution_time = str(end_time - start_time)
 			#printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
-			#execution_time, str(id.num_nodesexpanded), str(id.max_depth))
+			#execution_time, str(id.num_nodesexpanded), str(id.max_generation))
 
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
 				#genetic_results[1].append(id.num_nodesexpanded)#store num expanded
-				#genetic_results[2].append(id.max_depth)#store maximum depth
+				#genetic_results[2].append(id.max_generation)#store maximum generation
 
 	except (TimeoutException, RuntimeError) as error:
 		end_time = time.time()
 		print ('Could not find solution\nTimed Out: ' + str(error.args))
 		if (search_type == 'genetic'):
 				genetic_results[3][0] = genetic_results[3][0]+1
-				id.best_node.printSolution(id.solution_path)
+				id.best_node.printSolution()
 		execution_time = str(end_time - start_time)
-		printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
-				execution_time, str(id.num_nodesexpanded), str(id.max_depth))
+		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
+				execution_time, str(id.num_nodesexpanded), str(id.generation))
