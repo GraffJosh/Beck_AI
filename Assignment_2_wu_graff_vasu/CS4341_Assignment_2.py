@@ -79,7 +79,7 @@ class SearchAlgorithm:
 		#for each generation
 		for num in range(num_generations):
 			#for every node in the zoo
-			for node in self.zoo
+			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness	#eval the heuristic
 			
@@ -100,11 +100,13 @@ class SearchAlgorithm:
 		#print(self.best_node.eval_node_fitness())
 
 		return self.best_node
-
-	def cull(self):
 		
+		#kill the weak
+	def cull(self):
+		pass
 
-	def breed_population(self, zoo):
+		#breed the population with itself
+	def breed_population(self):
 		self.generation = self.generation+1
 		new_zoo = [] # this is the new population
 		for organism in self.zoo:
