@@ -53,8 +53,8 @@ class SearchAlgorithm:
 		self.zoo = []
 
 	#Reorders the open list according to our heuristic function
-	def reorderOpen(self):
-		self.OPEN.sort(key=lambda x: abs(self.goal - x.value))
+	def reorder_nodes(self):
+		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
 
 	def init_operations(self):
 		num_nodes = 50 			# number of nodes in a zoo
@@ -74,15 +74,18 @@ class SearchAlgorithm:
 
 	def genetic_search(self):
 		self.init_operations()
-		num_reproductions = 1000
+		num_generations = 1000
 
-		for num in range(num_reproductions):
-<<<<<<< HEAD
-			self.zoo = self.genetic_search_recurse(self.zoo)
+		#for each generation
+		for num in range(num_generations):
+			#for every node in the zoo
+			for node in self.zoo
+				node.value = node.eval_node_val()		#eval the node
+				node.heuristic = node.eval_node_fitness	#eval the heuristic
 			
-=======
-			self.zoo = self.breed_population(self.zoo)
->>>>>>> origin/master
+			self.reorder_nodes()
+			self.cull()
+			self.breed_population()
 
 		self.best_node = self.zoo[0]
 
@@ -98,13 +101,11 @@ class SearchAlgorithm:
 
 		return self.best_node
 
-<<<<<<< HEAD
-	def genetic_search_recurse(self, zoo):
-		self.generation = self.generation+1
-=======
-	def breed_population(self, zoo):
+	def cull(self):
+		
 
->>>>>>> origin/master
+	def breed_population(self, zoo):
+		self.generation = self.generation+1
 		new_zoo = [] # this is the new population
 		for organism in self.zoo:
 
@@ -168,11 +169,11 @@ class Node:
 		return 1 / abs(self.goal - num)
 
 	def __init__(self, start_value, target_value, operations):
-		#self.value = self.eval_node_val()
+		self.value = 0
 		self.operations = operations
 		self.start = start_value
 		self.goal = target_value
-		#self.heuristic = self.eval_node_h()
+		self.heuristic = 0
 
 	def printSolution(self):
 		num = self.start
