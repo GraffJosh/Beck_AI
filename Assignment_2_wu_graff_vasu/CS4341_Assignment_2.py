@@ -75,7 +75,7 @@ class SearchAlgorithm:
 
 	def genetic_search(self):
 		self.init_operations()
-		num_generations = 1000
+		num_generations = 10
 
 		#for each generation
 		for num in range(num_generations):
@@ -84,9 +84,9 @@ class SearchAlgorithm:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness	#eval the heuristic
 			
-			self.reorder_nodes()
-			self.cull()
-			self.breed_population()
+			#self.reorder_nodes()
+			#self.cull()
+			self.zoo.extend(self.breed_population())
 
 		self.best_node = self.zoo[0]
 
@@ -97,15 +97,17 @@ class SearchAlgorithm:
 			if organism.eval_node_fitness() > self.best_node.eval_node_fitness():
 				self.best_node = organism
 
-		#self.best_node.printSolution()
-		#print(self.best_node.eval_node_fitness())
-
 		return self.best_node
 
 		#kill the weak
 	def cull(self):
-		del(self.zoo[len(self.zoo)*.33:])
+		del(self.zoo[math.floor(len(self.zoo)*.33):])
 		pass
+
+	def mutate(self):
+		mutation_percent = 0.3
+		for index in range(0, math.floor(len(self.zoo) * mutation_percent)):
+			random.choice(self.zoo).irradiate(self.operations_list)
 
 		#breed the population with itself
 	def breed_population(self):
@@ -118,7 +120,7 @@ class SearchAlgorithm:
 			parentB = self.choose_weighted_parent(self.zoo)
 
 			child = self.reproduce(parentA, parentB)
-			self.zoo.append(child)
+			new_zoo.append(child)
 		#don't really need new zoo
 		return new_zoo
 
@@ -178,6 +180,9 @@ class Node:
 		self.start = start_value
 		self.goal = target_value
 		self.heuristic = 0
+
+	def irradiate(self, operations_list):
+		self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
 
 	def printSolution(self):
 		num = self.start
