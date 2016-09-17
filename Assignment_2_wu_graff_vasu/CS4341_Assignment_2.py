@@ -58,7 +58,7 @@ class SearchAlgorithm:
 
 	def init_operations(self):
 		num_nodes = 10 			# number of nodes in a zoo
-		num_operations = 30		# number of operators per node
+		num_operations = 140		# number of operators per node
 		
 
 		for node_num in range(num_nodes):
@@ -75,7 +75,7 @@ class SearchAlgorithm:
 
 	def genetic_search(self):
 		self.init_operations()
-		num_generations = 10
+		num_generations = 15
 
 		#for each generation
 		for num in range(num_generations):
@@ -83,13 +83,13 @@ class SearchAlgorithm:
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness	#eval the heuristic
-				print (len(node.operations))
+				#print (len(node.operations))
 			
 			self.reorder_nodes()
 			self.cull()
-			self.zoo = self.breed_population()
+			self.zoo.extend(self.breed_population())
 
-		self.best_node = self.zoo[0]
+		self.best_node = self.zoo.pop()
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -102,9 +102,9 @@ class SearchAlgorithm:
 
 		#kill the weak
 	def cull(self):
-		for index in range(len(self.zoo)*cull_percent, len(self.zoo))
-			del(self.zoo[index])
-
+		cull_percent = 0.66
+		for index in range(math.floor(len(self.zoo)*cull_percent), len(self.zoo)):
+			del(self.zoo[len(self.zoo)-1])
 		pass
 
 	def mutate(self):
