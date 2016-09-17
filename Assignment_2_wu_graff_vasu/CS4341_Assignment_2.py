@@ -57,8 +57,8 @@ class SearchAlgorithm:
 		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
 
 	def init_operations(self):
-		num_nodes = 10 			# number of nodes in a zoo
-		num_operations = 140		# number of operators per node
+		num_nodes = 50 			# number of nodes in a zoo
+		num_operations = 130		# number of operators per node
 		
 
 		for node_num in range(num_nodes):
@@ -75,7 +75,7 @@ class SearchAlgorithm:
 
 	def genetic_search(self):
 		self.init_operations()
-		num_generations = 15
+		num_generations = 100
 
 		#for each generation
 		for num in range(num_generations):
@@ -88,8 +88,8 @@ class SearchAlgorithm:
 			self.reorder_nodes()
 			self.cull()
 			self.zoo.extend(self.breed_population())
-
-		self.best_node = self.zoo.pop()
+			self.best_node = self.zoo[0]
+		self.best_node = self.zoo[0]
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -129,7 +129,8 @@ class SearchAlgorithm:
 
 	def reproduce(self, orgA, orgB):
 		length = len(orgA.operations)
-		cut_off = random.randint(0, length)
+		cut_off_percent = .5
+		cut_off = math.floor(length*cut_off_percent)# random.randint(0, length)
 
 		child_operations = orgA.operations[:cut_off] + orgB.operations[cut_off:]
 		child = Node(orgA.start, orgB.goal, child_operations)
