@@ -58,7 +58,7 @@ class SearchAlgorithm:
 
 	def init_operations(self):
 		num_nodes = 50 			# number of nodes in a zoo
-		num_operations = 130		# number of operators per node
+		num_operations = 20		# number of operators per node
 		
 
 		for node_num in range(num_nodes):
@@ -82,7 +82,7 @@ class SearchAlgorithm:
 			#for every node in the zoo
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
-				node.heuristic = node.eval_node_fitness	#eval the heuristic
+				node.heuristic = node.eval_node_fitness()	#eval the heuristic
 				#print (len(node.operations))
 			
 			self.reorder_nodes()
