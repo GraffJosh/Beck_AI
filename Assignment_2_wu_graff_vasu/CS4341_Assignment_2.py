@@ -84,9 +84,12 @@ class SearchAlgorithm:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness	#eval the heuristic
 			
-			#self.reorder_nodes()
-			#self.cull()
+			self.reorder_nodes()
+			self.cull()
 			self.zoo = self.breed_population()
+			self.mutate()
+
+			self.best_node = self.zoo[0]
 
 		self.best_node = self.zoo[0]
 
@@ -101,7 +104,9 @@ class SearchAlgorithm:
 
 		#kill the weak
 	def cull(self):
-		del(self.zoo[math.floor(len(self.zoo)*.2):len(self.zoo)])
+		cull_percent = 0.66
+		for index in range(math.floor(len(self.zoo)*cull_percent), len(self.zoo)):
+			del(self.zoo[len(self.zoo)-1])
 		pass
 
 	def mutate(self):
@@ -182,7 +187,7 @@ class Node:
 		self.heuristic = 0
 
 	def irradiate(self, operations_list):
-		self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+		self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
 
 	def printSolution(self):
 		num = self.start
