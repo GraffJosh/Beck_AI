@@ -83,6 +83,7 @@ class SearchAlgorithm:
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness	#eval the heuristic
+				print (len(node.operations))
 			
 			#self.reorder_nodes()
 			#self.cull()
@@ -101,7 +102,8 @@ class SearchAlgorithm:
 
 		#kill the weak
 	def cull(self):
-		del(self.zoo[math.floor(len(self.zoo)*.33):])
+		for index in range(len(self.zoo)*cull_percent, len(self.zoo))
+			del(self.zoo[index])
 		pass
 
 	def mutate(self):
