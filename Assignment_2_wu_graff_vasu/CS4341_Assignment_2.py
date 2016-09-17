@@ -57,7 +57,7 @@ class SearchAlgorithm:
 		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
 
 	def init_operations(self):
-		num_nodes = 50 			# number of nodes in a zoo
+		num_nodes = 10 			# number of nodes in a zoo
 		num_operations = 30		# number of operators per node
 		
 
@@ -68,6 +68,7 @@ class SearchAlgorithm:
 			# appends to the zoo an initialized node.
 			for op_num in range(num_operations):
 				# appends to op_array a random operator from our pool
+				random.shuffle(self.operations_list)
 				op_array.append(random.choice(self.operations_list))
 
 			self.zoo.append(Node(self.start, self.goal, op_array))
@@ -100,9 +101,10 @@ class SearchAlgorithm:
 		#print(self.best_node.eval_node_fitness())
 
 		return self.best_node
-		
+
 		#kill the weak
 	def cull(self):
+		del(self.zoo[len(self.zoo)*.33:])
 		pass
 
 		#breed the population with itself
@@ -116,8 +118,8 @@ class SearchAlgorithm:
 			parentB = self.choose_weighted_parent(self.zoo)
 
 			child = self.reproduce(parentA, parentB)
-			new_zoo.append(child)
-
+			self.zoo.append(child)
+		#don't really need new zoo
 		return new_zoo
 
 	def reproduce(self, orgA, orgB):
