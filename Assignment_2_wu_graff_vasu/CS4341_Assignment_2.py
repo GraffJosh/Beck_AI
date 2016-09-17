@@ -89,6 +89,7 @@ class SearchAlgorithm:
 			self.cull()
 			self.zoo.extend(self.breed_population())
 			self.best_node = self.zoo[0]
+			self.mutate()
 		self.best_node = self.zoo[0]
 
 		for organism in self.zoo:
@@ -186,7 +187,7 @@ class Node:
 		self.heuristic = 0
 
 	def irradiate(self, operations_list):
-		self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+		self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
 
 	def printSolution(self):
 		num = self.start
