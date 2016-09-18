@@ -34,7 +34,7 @@ class SearchAlgorithm:
 		# Const Variables
 		self.init_num_nodes = 50 			# number of nodes in a zoo
 		self.num_generations = 20
-		self.max_num_operations = 10
+		self.max_num_operations = 100
 		self.cull_percent = 0.5
 		self.mutation_percent = 0.3
 
@@ -48,16 +48,9 @@ class SearchAlgorithm:
 
 	#Initialize the first generation
 	def init_operations(self):
-<<<<<<< HEAD
-		num_nodes = 50 			# number of nodes in a zoo
-		num_operations = 20		# number of operators per node
-		
 
-		for node_num in range(num_nodes):
-=======
 		self.generation += 1
 		for node_num in range(self.init_num_nodes):
->>>>>>> origin/JWU_Dev3
 
 			op_array = [] # a list of nodes
 			
