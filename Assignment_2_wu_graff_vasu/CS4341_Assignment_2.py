@@ -72,10 +72,6 @@ class SearchAlgorithm:
 	def genetic_search(self):
 		#create initial population
 		self.init_operations()
-<<<<<<< HEAD
-		num_generations = 100
-=======
->>>>>>> origin/JWU_Dev3
 
 		#for each generation
 		for num in range(self.num_generations):
@@ -83,12 +79,9 @@ class SearchAlgorithm:
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness()	#eval the heuristic
-<<<<<<< HEAD
-=======
 				if node.value == self.goal:
 					self.best_node = node
 					return self.best_node
->>>>>>> origin/JWU_Dev3
 				#print (len(node.operations))
 			
 			# Reorder nodes in terms of best heuristic
@@ -97,17 +90,11 @@ class SearchAlgorithm:
 			self.cull()
 			# Breed the fittest of the generation to create more children nodes
 			self.zoo.extend(self.breed_population())
-<<<<<<< HEAD
-			self.best_node = self.zoo[0]
-			self.mutate()
-		self.best_node = self.zoo[0]
-=======
 
 			# Maybe a child node can have the best heuristic?
 			self.best_node = self.zoo[0]
 			self.h_list_graph.append(self.computeMeanHeuristic(self.zoo))
 			print (len(self.zoo))
->>>>>>> origin/JWU_Dev3
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -143,12 +130,6 @@ class SearchAlgorithm:
 		return new_zoo
 
 	def reproduce(self, orgA, orgB):
-<<<<<<< HEAD
-		length = len(orgA.operations)
-		cut_off_percent = .5
-		cut_off = math.floor(length*cut_off_percent)# random.randint(0, length)
-
-=======
 		# pick the organism with the shorter length
 		lengthA = len(orgA.operations)
 		lengthB = len(orgB.operations)
@@ -159,7 +140,6 @@ class SearchAlgorithm:
 		#finds the minimum of both to ensure no index of range
 		cut_off = min(length, max_cut_off)
 		#create child operations list
->>>>>>> origin/JWU_Dev3
 		child_operations = orgA.operations[:cut_off] + orgB.operations[cut_off:]
 		#create child
 		child = Node(orgA.start, orgB.goal, child_operations)
@@ -220,16 +200,12 @@ class Node:
 		return 1 / abs(self.goal - num)
 
 	def irradiate(self, operations_list):
-<<<<<<< HEAD
-		self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
-=======
 		# SUBSTITUTE
 		# self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
 		# REMOVE
 		self.operations.pop(randint(0, len(self.operations)) - 1)
 		# ADD (need to add a maximum operations)
 		# self.operations.append(random.choice(operations_list))
->>>>>>> origin/JWU_Dev3
 
 	def printSolution(self):
 		num = self.start
