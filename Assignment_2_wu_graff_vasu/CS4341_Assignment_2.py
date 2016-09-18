@@ -55,7 +55,7 @@ class SearchAlgorithm:
 			op_array = [] # a list of nodes
 			
 			# appends to the zoo an initialized node given a maximum number of operations
-			for op_num in range(random.randint(0,self.max_num_operations)):
+			for op_num in range(random.randint(1,self.max_num_operations)):
 				# appends to op_array a random operator from our pool
 				random.shuffle(self.operations_list) # why have this? lol
 				op_array.append(random.choice(self.operations_list))
