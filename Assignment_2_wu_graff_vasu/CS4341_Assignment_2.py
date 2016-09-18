@@ -3,6 +3,7 @@ from __future__ import with_statement # Required in 2.5
 import signal
 from contextlib import contextmanager
 from sys import argv
+import matplotlib.pyplot as plt
 import sys
 import time
 import itertools
@@ -44,9 +45,11 @@ class SearchAlgorithm:
 		self.start = start
 		self.goal = goal
 		self.operations_list = operations_list
-		self.num_nodesexpanded = 1
 		self.generation = 0
 		self.best_node = self.current_node
+		self.h_list_graph = []
+
+		self.max_num_operations = 15
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -57,39 +60,41 @@ class SearchAlgorithm:
 		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
 
 	def init_operations(self):
-		num_nodes = 10 			# number of nodes in a zoo
-		num_operations = 140		# number of operators per node
-		
+		num_nodes = 50 			# number of nodes in a zoo
 
 		for node_num in range(num_nodes):
 
 			op_array = [] # a list of nodes
 			
-			# appends to the zoo an initialized node.
-			for op_num in range(num_operations):
+			# appends to the zoo an initialized node given a maximum number of operations
+			for op_num in range(random.randint(0,self.max_num_operations)):
 				# appends to op_array a random operator from our pool
-				random.shuffle(self.operations_list)
+				random.shuffle(self.operations_list) # why have this? lol
 				op_array.append(random.choice(self.operations_list))
 
 			self.zoo.append(Node(self.start, self.goal, op_array))
 
 	def genetic_search(self):
 		self.init_operations()
-		num_generations = 15
+		num_generations = 20
 
 		#for each generation
 		for num in range(num_generations):
 			#for every node in the zoo
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
-				node.heuristic = node.eval_node_fitness	#eval the heuristic
+				node.heuristic = node.eval_node_fitness()	#eval the heuristic
+				print (node.value)
+				if node.value == self.goal:
+					self.best_node = node
+					return self.best_node
 				#print (len(node.operations))
 			
 			self.reorder_nodes()
 			self.cull()
 			self.zoo.extend(self.breed_population())
-
-		self.best_node = self.zoo.pop()
+			self.best_node = self.zoo[0]
+			self.h_list_graph.append(self.computeMeanHeuristic(self.zoo))
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -128,9 +133,14 @@ class SearchAlgorithm:
 		return new_zoo
 
 	def reproduce(self, orgA, orgB):
-		length = len(orgA.operations)
-		cut_off = random.randint(0, length)
-
+		# pick the organism with the shorter length
+		lengthA = len(orgA.operations)
+		lengthB = len(orgB.operations)
+		#initialize length to organism with least number of operators
+		length = min(lengthA,lengthB)
+		#evaluate cutoff point to crossover
+		max_cut_off = random.randint(0, math.floor(self.max_num_operations/2))
+		cut_off = min(length, max_cut_off)
 		child_operations = orgA.operations[:cut_off] + orgB.operations[cut_off:]
 		child = Node(orgA.start, orgB.goal, child_operations)
 		return child
@@ -149,6 +159,11 @@ class SearchAlgorithm:
 
 		return numpy.random.choice(zoo, p = weights)
 
+	def computeMeanHeuristic(self, generation_list):
+		return	sum(node.heuristic for node in generation_list)/(len(generation_list))
+
+
+
 #Operation class holding an operator and integer from file input
 class Operation:
 	def __init__(self, operator, integer):
@@ -158,12 +173,19 @@ class Operation:
 # For the genetic algorithm, a node contains information about
 # the operators that are being evaluated.  
 class Node:
+	def __init__(self, start_value, target_value, operations):
+		self.value = 0
+		self.operations = operations
+		self.start = start_value
+		self.goal = target_value
+		self.heuristic = 0
 		
 	def eval_node_val(self):
 		num = self.start
 
 		for operation in self.operations:
 			num = math_func[operation.operator](num, operation.integer)
+
 		return num
 
 	def eval_node_fitness(self):
@@ -176,13 +198,6 @@ class Node:
 			return float("inf")
 
 		return 1 / abs(self.goal - num)
-
-	def __init__(self, start_value, target_value, operations):
-		self.value = 0
-		self.operations = operations
-		self.start = start_value
-		self.goal = target_value
-		self.heuristic = 0
 
 	def irradiate(self, operations_list):
 		self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
@@ -206,12 +221,11 @@ def parseOperations(strlist):
 	return operations_list
 
 #Prints the stats
-def printStats(search_type, error, steps, time, nodes_expanded, max_generation):
+def printStats(search_type, error, steps, time, max_generation):
 	print ('\n\n' + search_type)
 	print ('error: '+ error)
 	print ('Number of steps required: ' + steps)
 	print ('Search time required: ' + time + ' seconds')
-	print ('Nodes expanded: ' + nodes_expanded)
 	print ('Maximum generation: ' + max_generation)
 
 
@@ -283,6 +297,9 @@ for filename in _iterArg:
 			print ('\nCLOSEST SOLUTION PATH')
 
 			erik.printSolution()
+			plt.plot(id.h_list_graph)
+			plt.ylabel('Heuristic')
+			plt.show()
 			execution_time = str(end_time - start_time)
 			#printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
 			#execution_time, str(id.num_nodesexpanded), str(id.max_generation))
@@ -300,4 +317,7 @@ for filename in _iterArg:
 				id.best_node.printSolution()
 		execution_time = str(end_time - start_time)
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time, str(id.num_nodesexpanded), str(id.generation))
+				execution_time, str(id.generation))
+		plt.plot(id.h_list_graph)
+		plt.ylabel('Heuristic')
+		plt.show()
