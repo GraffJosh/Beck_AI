@@ -11,30 +11,12 @@ import random
 import numpy
 import math
 
-#Instead of using numpy arithmetic functions, just made some functions to use
-
-def summation(a,b):
-	return a+b
-
-def difference(a,b):
-	return a-b
-
-def multiply(a,b):
-	return a*b
-
-def quotient(a,b):
-	return a/b
-
-def power(a,b):
-	return a**b
-
 #Here is our function switch case
-
-math_func = {'+' : summation,
-		   '-' : difference,
-		   '*' : multiply,
-		   '/' : quotient,
-		   '^' : power,
+math_func = {'+' : numpy.add,
+		   '-' : numpy.subtract,
+		   '*' : numpy.multiply,
+		   '/' : numpy.divide,
+		   '^' : numpy.power,
 }
 
 #Algorithm Search Class for each type
@@ -49,7 +31,12 @@ class SearchAlgorithm:
 		self.best_node = self.current_node
 		self.h_list_graph = []
 
-		self.max_num_operations = 15
+		# Const Variables
+		self.init_num_nodes = 50 			# number of nodes in a zoo
+		self.num_generations = 20
+		self.max_num_operations = 10
+		self.cull_percent = 0.5
+		self.mutation_percent = 0.3
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -59,10 +46,10 @@ class SearchAlgorithm:
 	def reorder_nodes(self):
 		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
 
+	#Initialize the first generation
 	def init_operations(self):
-		num_nodes = 50 			# number of nodes in a zoo
-
-		for node_num in range(num_nodes):
+		self.generation += 1
+		for node_num in range(self.init_num_nodes):
 
 			op_array = [] # a list of nodes
 			
@@ -75,26 +62,31 @@ class SearchAlgorithm:
 			self.zoo.append(Node(self.start, self.goal, op_array))
 
 	def genetic_search(self):
+		#create initial population
 		self.init_operations()
-		num_generations = 20
 
 		#for each generation
-		for num in range(num_generations):
+		for num in range(self.num_generations):
 			#for every node in the zoo
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness()	#eval the heuristic
-				print (node.value)
 				if node.value == self.goal:
 					self.best_node = node
 					return self.best_node
 				#print (len(node.operations))
 			
+			# Reorder nodes in terms of best heuristic
 			self.reorder_nodes()
+			# Cull the weaker nodes
 			self.cull()
+			# Breed the fittest of the generation to create more children nodes
 			self.zoo.extend(self.breed_population())
+
+			# Maybe a child node can have the best heuristic?
 			self.best_node = self.zoo[0]
 			self.h_list_graph.append(self.computeMeanHeuristic(self.zoo))
+			print (len(self.zoo))
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -107,19 +99,16 @@ class SearchAlgorithm:
 
 		#kill the weak
 	def cull(self):
-		cull_percent = 0.66
-		for index in range(math.floor(len(self.zoo)*cull_percent), len(self.zoo)):
+		for index in range(math.floor(len(self.zoo)*self.cull_percent), len(self.zoo)):
 			del(self.zoo[len(self.zoo)-1])
-		pass
 
 	def mutate(self):
-		mutation_percent = 0.3
-		for index in range(0, math.floor(len(self.zoo) * mutation_percent)):
+		for index in range(0, math.floor(len(self.zoo) * self.mutation_percent)):
 			random.choice(self.zoo).irradiate(self.operations_list)
 
 		#breed the population with itself
 	def breed_population(self):
-		self.generation = self.generation+1
+		self.generation += 1
 		new_zoo = [] # this is the new population
 		for organism in self.zoo:
 
@@ -140,8 +129,11 @@ class SearchAlgorithm:
 		length = min(lengthA,lengthB)
 		#evaluate cutoff point to crossover
 		max_cut_off = random.randint(0, math.floor(self.max_num_operations/2))
+		#finds the minimum of both to ensure no index of range
 		cut_off = min(length, max_cut_off)
+		#create child operations list
 		child_operations = orgA.operations[:cut_off] + orgB.operations[cut_off:]
+		#create child
 		child = Node(orgA.start, orgB.goal, child_operations)
 		return child
 
@@ -200,7 +192,12 @@ class Node:
 		return 1 / abs(self.goal - num)
 
 	def irradiate(self, operations_list):
-		self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+		# SUBSTITUTE
+		# self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+		# REMOVE
+		self.operations.pop(randint(0, len(self.operations)) - 1)
+		# ADD (need to add a maximum operations)
+		# self.operations.append(random.choice(operations_list))
 
 	def printSolution(self):
 		num = self.start
