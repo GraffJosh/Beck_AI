@@ -3,6 +3,7 @@ from __future__ import with_statement # Required in 2.5
 import signal
 from contextlib import contextmanager
 from sys import argv
+import matplotlib.pyplot as plt
 import sys
 import time
 import itertools
@@ -10,30 +11,12 @@ import random
 import numpy
 import math
 
-#Instead of using numpy arithmetic functions, just made some functions to use
-
-def summation(a,b):
-	return a+b
-
-def difference(a,b):
-	return a-b
-
-def multiply(a,b):
-	return a*b
-
-def quotient(a,b):
-	return a/b
-
-def power(a,b):
-	return a**b
-
 #Here is our function switch case
-
-math_func = {'+' : summation,
-		   '-' : difference,
-		   '*' : multiply,
-		   '/' : quotient,
-		   '^' : power,
+math_func = {'+' : numpy.add,
+		   '-' : numpy.subtract,
+		   '*' : numpy.multiply,
+		   '/' : numpy.divide,
+		   '^' : numpy.power,
 }
 
 #Algorithm Search Class for each type
@@ -44,9 +27,16 @@ class SearchAlgorithm:
 		self.start = start
 		self.goal = goal
 		self.operations_list = operations_list
-		self.num_nodesexpanded = 1
 		self.generation = 0
 		self.best_node = self.current_node
+		self.h_list_graph = []
+
+		# Const Variables
+		self.init_num_nodes = 50 			# number of nodes in a zoo
+		self.num_generations = 20
+		self.max_num_operations = 10
+		self.cull_percent = 0.5
+		self.mutation_percent = 0.3
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -56,41 +46,68 @@ class SearchAlgorithm:
 	def reorder_nodes(self):
 		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
 
+	#Initialize the first generation
 	def init_operations(self):
+<<<<<<< HEAD
 		num_nodes = 50 			# number of nodes in a zoo
 		num_operations = 20		# number of operators per node
 		
 
 		for node_num in range(num_nodes):
+=======
+		self.generation += 1
+		for node_num in range(self.init_num_nodes):
+>>>>>>> origin/JWU_Dev3
 
 			op_array = [] # a list of nodes
 			
-			# appends to the zoo an initialized node.
-			for op_num in range(num_operations):
+			# appends to the zoo an initialized node given a maximum number of operations
+			for op_num in range(random.randint(0,self.max_num_operations)):
 				# appends to op_array a random operator from our pool
-				random.shuffle(self.operations_list)
+				random.shuffle(self.operations_list) # why have this? lol
 				op_array.append(random.choice(self.operations_list))
 
 			self.zoo.append(Node(self.start, self.goal, op_array))
 
 	def genetic_search(self):
+		#create initial population
 		self.init_operations()
+<<<<<<< HEAD
 		num_generations = 100
+=======
+>>>>>>> origin/JWU_Dev3
 
 		#for each generation
-		for num in range(num_generations):
+		for num in range(self.num_generations):
 			#for every node in the zoo
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness()	#eval the heuristic
+<<<<<<< HEAD
+=======
+				if node.value == self.goal:
+					self.best_node = node
+					return self.best_node
+>>>>>>> origin/JWU_Dev3
 				#print (len(node.operations))
 			
+			# Reorder nodes in terms of best heuristic
 			self.reorder_nodes()
+			# Cull the weaker nodes
 			self.cull()
+			# Breed the fittest of the generation to create more children nodes
 			self.zoo.extend(self.breed_population())
+<<<<<<< HEAD
 			self.best_node = self.zoo[0]
 			self.mutate()
 		self.best_node = self.zoo[0]
+=======
+
+			# Maybe a child node can have the best heuristic?
+			self.best_node = self.zoo[0]
+			self.h_list_graph.append(self.computeMeanHeuristic(self.zoo))
+			print (len(self.zoo))
+>>>>>>> origin/JWU_Dev3
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -103,19 +120,16 @@ class SearchAlgorithm:
 
 		#kill the weak
 	def cull(self):
-		cull_percent = 0.66
-		for index in range(math.floor(len(self.zoo)*cull_percent), len(self.zoo)):
+		for index in range(math.floor(len(self.zoo)*self.cull_percent), len(self.zoo)):
 			del(self.zoo[len(self.zoo)-1])
-		pass
 
 	def mutate(self):
-		mutation_percent = 0.3
-		for index in range(0, math.floor(len(self.zoo) * mutation_percent)):
+		for index in range(0, math.floor(len(self.zoo) * self.mutation_percent)):
 			random.choice(self.zoo).irradiate(self.operations_list)
 
 		#breed the population with itself
 	def breed_population(self):
-		self.generation = self.generation+1
+		self.generation += 1
 		new_zoo = [] # this is the new population
 		for organism in self.zoo:
 
@@ -129,11 +143,25 @@ class SearchAlgorithm:
 		return new_zoo
 
 	def reproduce(self, orgA, orgB):
+<<<<<<< HEAD
 		length = len(orgA.operations)
 		cut_off_percent = .5
 		cut_off = math.floor(length*cut_off_percent)# random.randint(0, length)
 
+=======
+		# pick the organism with the shorter length
+		lengthA = len(orgA.operations)
+		lengthB = len(orgB.operations)
+		#initialize length to organism with least number of operators
+		length = min(lengthA,lengthB)
+		#evaluate cutoff point to crossover
+		max_cut_off = random.randint(0, math.floor(self.max_num_operations/2))
+		#finds the minimum of both to ensure no index of range
+		cut_off = min(length, max_cut_off)
+		#create child operations list
+>>>>>>> origin/JWU_Dev3
 		child_operations = orgA.operations[:cut_off] + orgB.operations[cut_off:]
+		#create child
 		child = Node(orgA.start, orgB.goal, child_operations)
 		return child
 
@@ -151,6 +179,11 @@ class SearchAlgorithm:
 
 		return numpy.random.choice(zoo, p = weights)
 
+	def computeMeanHeuristic(self, generation_list):
+		return	sum(node.heuristic for node in generation_list)/(len(generation_list))
+
+
+
 #Operation class holding an operator and integer from file input
 class Operation:
 	def __init__(self, operator, integer):
@@ -160,12 +193,19 @@ class Operation:
 # For the genetic algorithm, a node contains information about
 # the operators that are being evaluated.  
 class Node:
+	def __init__(self, start_value, target_value, operations):
+		self.value = 0
+		self.operations = operations
+		self.start = start_value
+		self.goal = target_value
+		self.heuristic = 0
 		
 	def eval_node_val(self):
 		num = self.start
 
 		for operation in self.operations:
 			num = math_func[operation.operator](num, operation.integer)
+
 		return num
 
 	def eval_node_fitness(self):
@@ -179,15 +219,17 @@ class Node:
 
 		return 1 / abs(self.goal - num)
 
-	def __init__(self, start_value, target_value, operations):
-		self.value = 0
-		self.operations = operations
-		self.start = start_value
-		self.goal = target_value
-		self.heuristic = 0
-
 	def irradiate(self, operations_list):
+<<<<<<< HEAD
 		self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+=======
+		# SUBSTITUTE
+		# self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+		# REMOVE
+		self.operations.pop(randint(0, len(self.operations)) - 1)
+		# ADD (need to add a maximum operations)
+		# self.operations.append(random.choice(operations_list))
+>>>>>>> origin/JWU_Dev3
 
 	def printSolution(self):
 		num = self.start
@@ -208,12 +250,11 @@ def parseOperations(strlist):
 	return operations_list
 
 #Prints the stats
-def printStats(search_type, error, steps, time, nodes_expanded, max_generation):
+def printStats(search_type, error, steps, time, max_generation):
 	print ('\n\n' + search_type)
 	print ('error: '+ error)
 	print ('Number of steps required: ' + steps)
 	print ('Search time required: ' + time + ' seconds')
-	print ('Nodes expanded: ' + nodes_expanded)
 	print ('Maximum generation: ' + max_generation)
 
 
@@ -285,6 +326,9 @@ for filename in _iterArg:
 			print ('\nCLOSEST SOLUTION PATH')
 
 			erik.printSolution()
+			plt.plot(id.h_list_graph)
+			plt.ylabel('Heuristic')
+			plt.show()
 			execution_time = str(end_time - start_time)
 			#printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
 			#execution_time, str(id.num_nodesexpanded), str(id.max_generation))
@@ -302,4 +346,7 @@ for filename in _iterArg:
 				id.best_node.printSolution()
 		execution_time = str(end_time - start_time)
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time, str(id.num_nodesexpanded), str(id.generation))
+				execution_time, str(id.generation))
+		plt.plot(id.h_list_graph)
+		plt.ylabel('Heuristic')
+		plt.show()
