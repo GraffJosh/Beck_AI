@@ -32,8 +32,8 @@ class SearchAlgorithm:
 		self.h_list_graph = []
 
 		# Const Variables
-		self.init_num_nodes = 50 			# number of nodes in a zoo
-		self.num_generations = 20
+		self.init_num_nodes = 10 			# number of nodes in a zoo
+		self.num_generations = 10000
 		self.max_num_operations = 100
 		self.cull_percent = 0.5
 		self.mutation_percent = 0.3
@@ -84,10 +84,13 @@ class SearchAlgorithm:
 			# Breed the fittest of the generation to create more children nodes
 			self.zoo.extend(self.breed_population())
 
+			#mutate randomly
+			self.mutate()
+
 			# Maybe a child node can have the best heuristic?
 			self.best_node = self.zoo[0]
 			self.h_list_graph.append(self.computeMeanHeuristic(self.zoo))
-			print (len(self.zoo))
+			#print (len(self.zoo))
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -193,12 +196,20 @@ class Node:
 		return 1 / abs(self.goal - num)
 
 	def irradiate(self, operations_list):
-		# SUBSTITUTE
-		# self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
-		# REMOVE
-		self.operations.pop(randint(0, len(self.operations)) - 1)
-		# ADD (need to add a maximum operations)
-		# self.operations.append(random.choice(operations_list))
+		radiation = random.randint(0,2)
+		#print(radiation)
+		if(radiation == 0):
+			# SUBSTITUTE
+			self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+			#print ("Sub")
+		elif(radiation == 1):
+			# REMOVE
+			self.operations.pop(random.randint(0, len(self.operations)) - 1)
+			#print ("Rem")
+		if(radiation == 2):
+			# ADD (need to add a maximum operations)
+			self.operations.append(random.choice(operations_list))
+			#print ("Add")
 
 	def printSolution(self):
 		num = self.start
@@ -293,14 +304,12 @@ for filename in _iterArg:
 				erik = id.genetic_search()
 			end_time = time.time()
 			print ('\nCLOSEST SOLUTION PATH')
-
-			erik.printSolution()
-			plt.plot(id.h_list_graph)
-			plt.ylabel('Heuristic')
-			plt.show()
 			execution_time = str(end_time - start_time)
-			#printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
-			#execution_time, str(id.num_nodesexpanded), str(id.max_generation))
+			erik.printSolution()
+			printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
+				execution_time, str(id.generation))
+
+			# plt.show()
 
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
