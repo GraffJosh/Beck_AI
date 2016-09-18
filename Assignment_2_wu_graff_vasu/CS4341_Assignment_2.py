@@ -34,7 +34,7 @@ class SearchAlgorithm:
 		# Const Variables
 		self.init_num_nodes = 10 			# number of nodes in a zoo
 		self.num_generations = 10000
-		self.max_num_operations = 100
+		self.max_num_operations = 30
 		self.cull_percent = 0.5
 		self.mutation_percent = 0.3
 
@@ -65,7 +65,6 @@ class SearchAlgorithm:
 	def genetic_search(self):
 		#create initial population
 		self.init_operations()
-
 		#for each generation
 		for num in range(self.num_generations):
 			#for every node in the zoo
@@ -204,7 +203,8 @@ class Node:
 			#print ("Sub")
 		elif(radiation == 1):
 			# REMOVE
-			self.operations.pop(random.randint(0, len(self.operations)) - 1)
+			if(len(self.operations) > 1):
+				self.operations.pop(random.randint(0, len(self.operations)) - 1)
 			#print ("Rem")
 		if(radiation == 2):
 			# ADD (need to add a maximum operations)
@@ -325,6 +325,6 @@ for filename in _iterArg:
 		execution_time = str(end_time - start_time)
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
 				execution_time, str(id.generation))
-		plt.plot(id.h_list_graph)
-		plt.ylabel('Heuristic')
-		plt.show()
+		# plt.plot(id.h_list_graph)
+		# plt.ylabel('Heuristic')
+		# plt.show()
