@@ -35,7 +35,7 @@ class SearchAlgorithm:
 		self.init_num_nodes = 50 			# number of nodes in a zoo
 		self.num_generations = 20
 		self.max_num_operations = 10
-		self.cull_percent = 0.5
+		self.cull_percent = 0.6
 		self.mutation_percent = 0.3
 
 		# A zoo is an array of "nodes" where each node contains 
@@ -54,11 +54,12 @@ class SearchAlgorithm:
 			op_array = [] # a list of nodes
 			
 			# appends to the zoo an initialized node given a maximum number of operations
-			for op_num in range(random.randint(0,self.max_num_operations)):
+			for op_num in range(random.randint(1,self.max_num_operations)):
 				# appends to op_array a random operator from our pool
 				random.shuffle(self.operations_list) # why have this? lol
 				op_array.append(random.choice(self.operations_list))
 
+			# add the node into the zoo (population)
 			self.zoo.append(Node(self.start, self.goal, op_array))
 
 	def genetic_search(self):
@@ -80,13 +81,15 @@ class SearchAlgorithm:
 			self.reorder_nodes()
 			# Cull the weaker nodes
 			self.cull()
-			# Breed the fittest of the generation to create more children nodes
+			# birds & bees baby
 			self.zoo.extend(self.breed_population())
 
 			# Maybe a child node can have the best heuristic?
 			self.best_node = self.zoo[0]
-			self.h_list_graph.append(self.computeMeanHeuristic(self.zoo))
-			print (len(self.zoo))
+			self.h_list_graph.append(abs(self.best_node.value - self.goal))
+
+			# inject nuclear material into organism
+			self.mutate()
 
 		for organism in self.zoo:
 			if organism.eval_node_fitness() == float("inf"):
@@ -99,7 +102,7 @@ class SearchAlgorithm:
 
 		#kill the weak
 	def cull(self):
-		for index in range(math.floor(len(self.zoo)*self.cull_percent), len(self.zoo)):
+		for index in range(math.floor(len(self.zoo) * self.cull_percent), len(self.zoo)):
 			del(self.zoo[len(self.zoo)-1])
 
 	def mutate(self):
@@ -191,11 +194,12 @@ class Node:
 
 		return 1 / abs(self.goal - num)
 
+	#inject nuclear material into portion of the population
 	def irradiate(self, operations_list):
 		# SUBSTITUTE
-		# self.operations[randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+		# self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
 		# REMOVE
-		self.operations.pop(randint(0, len(self.operations)) - 1)
+		self.operations.pop(random.randint(0, len(self.operations)) - 1)
 		# ADD (need to add a maximum operations)
 		# self.operations.append(random.choice(operations_list))
 
@@ -224,6 +228,12 @@ def printStats(search_type, error, steps, time, max_generation):
 	print ('Number of steps required: ' + steps)
 	print ('Search time required: ' + time + ' seconds')
 	print ('Maximum generation: ' + max_generation)
+
+#creates a matplot of list of data
+def generateHeuristicGraph(h_list):
+	plt.plot(h_list)
+	plt.ylabel('Heuristic')
+	plt.show()
 
 
 class TimeoutException(Exception): pass
@@ -294,12 +304,14 @@ for filename in _iterArg:
 			print ('\nCLOSEST SOLUTION PATH')
 
 			erik.printSolution()
-			plt.plot(id.h_list_graph)
-			plt.ylabel('Heuristic')
-			plt.show()
 			execution_time = str(end_time - start_time)
-			#printStats(search_type, str(abs(id.best_node.value - target_value)),str(len(id.solution_path)),
-			#execution_time, str(id.num_nodesexpanded), str(id.max_generation))
+
+			#print stats
+			printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
+				execution_time, str(id.generation))
+
+			#plot the average heuristic for each generation
+			generateHeuristicGraph(id.h_list_graph)
 
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
@@ -315,6 +327,5 @@ for filename in _iterArg:
 		execution_time = str(end_time - start_time)
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
 				execution_time, str(id.generation))
-		plt.plot(id.h_list_graph)
-		plt.ylabel('Heuristic')
-		plt.show()
+		#plot the average heuristic for each generation
+		generateHeuristicGraph(id.h_list_graph)
