@@ -30,14 +30,15 @@ class SearchAlgorithm:
 		self.generation = 0
 		self.best_node = self.current_node
 		self.h_list_graph = []
+		self.f_list_graph = []
 
 		# Const Variables
 
-		self.init_num_nodes = 4 			# number of nodes in a zoo
-		self.num_generations = 10000
+		self.init_num_nodes = 50		# number of nodes in a zoo
+		self.num_generations = 200
 		self.max_num_operations = 30
 		self.cull_percent = 0.5
-		self.mutation_percent = 0
+		self.mutation_percent = 0.7
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -73,9 +74,9 @@ class SearchAlgorithm:
 			for node in self.zoo:
 				node.value = node.eval_node_val()		#eval the node
 				node.heuristic = node.eval_node_fitness()	#eval the heuristic
-				if node.value == self.goal:
-					self.best_node = node
-					return self.best_node
+				# if node.value == self.goal:
+				# 	self.best_node = node
+				# 	return self.best_node
 				#print (len(node.operations))
 			
 			# Reorder nodes in terms of best heuristic
@@ -90,7 +91,8 @@ class SearchAlgorithm:
 
 			# Maybe a child node can have the best heuristic?
 			self.best_node = self.zoo[0]
-			self.h_list_graph.append(self.computeMeanHeuristic(self.zoo))
+			self.h_list_graph.append(self.computeMeanFitness(self.zoo))
+			self.f_list_graph.append(self.collectFitnesses(self.zoo))
 			#print (len(self.zoo))
 
 		for organism in self.zoo:
@@ -156,8 +158,17 @@ class SearchAlgorithm:
 
 		return numpy.random.choice(zoo, p = weights)
 
-	def computeMeanHeuristic(self, generation_list):
+	def computeMeanFitness(self, generation_list):
 		return	sum(node.heuristic for node in generation_list)/(len(generation_list))
+
+	def collectFitnesses(self, generation_list):
+		fitness_list = []
+		for node in generation_list:
+			data_point = []
+			data_point.append(node.heuristic)
+			data_point.append(self.generation)
+			fitness_list.append(data_point)
+		return fitness_list
 
 
 
@@ -236,17 +247,21 @@ def parseOperations(strlist):
 	return operations_list
 
 #Prints the stats
-def printStats(search_type, error, steps, time, max_generation):
+def printStats(search_type, error, steps, time, population_size, max_generation):
 	print ('\n\n' + search_type)
-	print ('error: '+ error)
-	print ('Number of steps required: ' + steps)
+	print ('Error: '+ error)
+	print ('Size of organism: ' + steps)
 	print ('Search time required: ' + time + ' seconds')
-	print ('Maximum generation: ' + max_generation)
+	print ('Population size: ' + population_size)
+	print ('Number of generations: ' + max_generation)
 
 #creates a matplot of list of data
-def generateHeuristicGraph(h_list):
-	plt.plot(h_list)
-	plt.ylabel('Heuristic')
+def generateFitnessGraph(h_list):
+	for dataline in h_list:
+		plt.scatter(dataline[1], dataline[0])
+	plt.ylabel('Fitness')
+	plt.xlabel('Generation')
+	plt.legend()
 	plt.show()
 
 
@@ -277,6 +292,7 @@ genetic_results = [[0 for x in range(w)] for y in range(h)]
 sys.setrecursionlimit(10000)
 error_sum = 0.0
 generation_sum = 0.0
+graph_data_lines = []
 for filename in _iterArg:
 	if len(argv) > 1 :
 		args = []
@@ -296,16 +312,6 @@ for filename in _iterArg:
 		else:
 			print ("not enough arguments in file")
 			exit(0)
-
-	# else:
-	# 	# Manual Input
-	# 	search_type = input('Search type? (iterative, genetic): ')
-	# 	starting_value = float(input('Starting value?: '))
-	# 	target_value = float(input('Target_Value?: '))
-	# 	time_limit = float(input('Time limit? (seconds): '))
-	# 	operations = input('Operations? (separate by spaces): ')
-	# 	operations_parsed = parseOperations(operations)
-
 	
 	try:
 		with time_limit_manager(int(time_limit)):
@@ -322,11 +328,16 @@ for filename in _iterArg:
 			execution_time = str(end_time - start_time)
 			erik.printSolution()
 			printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time, str(id.generation))
+				execution_time, str(id.init_num_nodes), str(id.generation))
 
-			# plt.show()
 			error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
 			generation_sum = generation_sum+id.generation
+
+			#add fitness data to graph
+			graph_data_lines.append(id.h_list_graph)
+
+			generateFitnessGraph(id.f_list_graph)
+
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
 				#genetic_results[1].append(id.num_nodesexpanded)#store num expanded
@@ -341,12 +352,16 @@ for filename in _iterArg:
 		execution_time = str(end_time - start_time)
 		error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
 		generation_sum = generation_sum+id.generation
-		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time, str(id.generation))
-
-		# plt.plot(id.h_list_graph)
-		# plt.ylabel('Heuristic')
-		# plt.show()
 		
+		#add fitness data to graph
+		graph_data_lines.append(id.h_list_graph)
+		
+		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
+				execution_time,str(id.init_num_nodes), str(id.generation))
+
+		generateFitnessGraph(id.f_list_graph)
+
 print("average error: "+str(error_sum/(len(argv)-1)))
 print("average generations: "+str(generation_sum/(len(argv)-1)))
+# create graph for each run
+# generateFitnessGraph(graph_data_lines)
