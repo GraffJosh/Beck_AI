@@ -1,33 +1,33 @@
-CS 4341 Assignment 1
-Basic search algorithms
+CS 4341 Assignment 2
+Genetic search algorithms
+Dependencies:
+	python3-matplotlib
+	python3-numpy
+
 Purpose
-This application finds the minimum number of given numeric operators to compute a given endpoint from a given startpoint. 
+This application finds the combination of given operators to compute a given endpoint from a given startpoint.
 
 Usage
-There are two ways to use this application, using a file input or using manual input.
+This application supports file input. Use the following format.
 File input
 Input files should be formatted as follows:
 	Search Type -- ‘greedy’ or ‘iterative’
-	Starting value -- truncated to integer
-	Ending value -- truncated to integer
-	Time limit -- float values accepted
-	Acceptable operators -- operator followed by integer. Separated by spaces.
+	Starting value -- float
+	Ending value -- float
+	Time limit -- truncated to integer
+	Acceptable operators -- operator followed by float. Separated by newlines.
 
 Testfile example:
 greedy
 5
 100
-2.5
-+1
--1
+2
++1.3
+^6.4
 -1
 
 
 Append the python3 call with as many input filenames as is required.
 Execution example:
-	:~/$ python3 CS4341_Assignment_1.py testfile1
-	:~/$ python3 CS4341_Assignment_1.py testfile1 testfile2
-
-Manual input (NOT WORKING, BUT FILE INPUT DOES)
-Simply follow the onscreen prompts after the following execution.
-:~/$ python3 CS4341_Assignment_1.py
+	:~/$ python3 CS4341_Assignment_2.py testfile1
+	:~/$ python3 CS4341_Assignment_2.py testfile1 testfile2
