@@ -32,11 +32,12 @@ class SearchAlgorithm:
 		self.h_list_graph = []
 
 		# Const Variables
-		self.init_num_nodes = 100 			# number of nodes in a zoo
-		self.num_generations = 500
+
+		self.init_num_nodes = 4 			# number of nodes in a zoo
+		self.num_generations = 10000
 		self.max_num_operations = 30
 		self.cull_percent = 0.5
-		self.mutation_percent = 0.3
+		self.mutation_percent = 0
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -198,20 +199,23 @@ class Node:
 	#inject nuclear material into portion of the population
 	def irradiate(self, operations_list):
 		radiation = random.randint(0,2)
-		#print(radiation)
-		if(radiation == 0):
-			# SUBSTITUTE
-			self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
-			#print ("Sub")
-		elif(radiation == 1):
-			# REMOVE
-			if(len(self.operations) > 1):
-				self.operations.pop(random.randint(0, len(self.operations)) - 1)
-			#print ("Rem")
-		if(radiation == 2):
-			# ADD (need to add a maximum operations)
+		if(len(self.operations)>0):
+			#print(radiation)
+			if(radiation == 0):
+				# SUBSTITUTE
+				self.operations[random.randint(0, len(self.operations)) - 1] = random.choice(operations_list)
+				#print ("Sub")
+			elif(radiation == 1):
+				# REMOVE
+				if(len(self.operations) > 1):
+					self.operations.pop(random.randint(0, len(self.operations)) - 1)
+				#print ("Rem")
+			if(radiation == 2):
+				# ADD (need to add a maximum operations)
+				self.operations.append(random.choice(operations_list))
+				#print ("Add")
+		else:
 			self.operations.append(random.choice(operations_list))
-			#print ("Add")
 
 	def printSolution(self):
 		num = self.start
@@ -271,6 +275,8 @@ genetic_results = [[0 for x in range(w)] for y in range(h)]
 
 #Limit the recursion limit
 sys.setrecursionlimit(10000)
+error_sum = 0.0
+generation_sum = 0.0
 for filename in _iterArg:
 	if len(argv) > 1 :
 		args = []
@@ -319,7 +325,8 @@ for filename in _iterArg:
 				execution_time, str(id.generation))
 
 			# plt.show()
-
+			error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
+			generation_sum = generation_sum+id.generation
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
 				#genetic_results[1].append(id.num_nodesexpanded)#store num expanded
@@ -332,9 +339,14 @@ for filename in _iterArg:
 				genetic_results[3][0] = genetic_results[3][0]+1
 				id.best_node.printSolution()
 		execution_time = str(end_time - start_time)
+		error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
+		generation_sum = generation_sum+id.generation
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
 				execution_time, str(id.generation))
 
 		# plt.plot(id.h_list_graph)
 		# plt.ylabel('Heuristic')
 		# plt.show()
+		
+print("average error: "+str(error_sum/(len(argv)-1)))
+print("average generations: "+str(generation_sum/(len(argv)-1)))
