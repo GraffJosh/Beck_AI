@@ -32,8 +32,8 @@ class SearchAlgorithm:
 		self.h_list_graph = []
 
 		# Const Variables
-		self.init_num_nodes = 10 			# number of nodes in a zoo
-		self.num_generations = 10000
+		self.init_num_nodes = 100 			# number of nodes in a zoo
+		self.num_generations = 500
 		self.max_num_operations = 30
 		self.cull_percent = 0.5
 		self.mutation_percent = 0.3
