@@ -11,14 +11,14 @@ Usage
 This application supports file input. Use the following format.
 File input
 Input files should be formatted as follows:
-	Search Type -- ‘greedy’ or ‘iterative’
+	Search Type -- ‘genetic'
 	Starting value -- float
 	Ending value -- float
 	Time limit -- truncated to integer
 	Acceptable operators -- operator followed by float. Separated by newlines.
 
 Testfile example:
-greedy
+genetic
 5
 100
 2
