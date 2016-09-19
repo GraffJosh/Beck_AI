@@ -34,8 +34,8 @@ class SearchAlgorithm:
 
 		# Const Variables
 
-		self.init_num_nodes = 50		# number of nodes in a zoo
-		self.num_generations = 200
+		self.init_num_nodes = 4		# number of nodes in a zoo
+		self.num_generations = 1000
 		self.max_num_operations = 30
 		self.cull_percent = 0.5
 		self.mutation_percent = 0.7
@@ -257,8 +257,9 @@ def printStats(search_type, error, steps, time, population_size, max_generation)
 
 #creates a matplot of list of data
 def generateFitnessGraph(h_list):
-	for dataline in h_list:
-		plt.scatter(dataline[1], dataline[0])
+	for generation in h_list:
+		for organism in generation:
+			plt.scatter(organism[1], organism[0])
 	plt.ylabel('Fitness')
 	plt.xlabel('Generation')
 	plt.legend()
