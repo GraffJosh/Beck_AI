@@ -34,8 +34,8 @@ class SearchAlgorithm:
 
 		# Const Variables
 
-		self.init_num_nodes = 4		# number of nodes in a zoo
-		self.num_generations = 1000
+		self.init_num_nodes = 50		# number of nodes in a zoo
+		self.num_generations = 100
 		self.max_num_operations = 30
 		self.cull_percent = 0.5
 		self.mutation_percent = 0.7
@@ -256,12 +256,17 @@ def printStats(search_type, error, steps, time, population_size, max_generation)
 	print ('Number of generations: ' + max_generation)
 
 #creates a matplot of list of data
-def generateFitnessGraph(h_list):
+def generateFitnessGraph(h_list, population_size, num_generations, cull_percent, mutation_percent, max_num_operations):
 	for generation in h_list:
 		for organism in generation:
 			plt.scatter(organism[1], organism[0])
 	plt.ylabel('Fitness')
 	plt.xlabel('Generation')
+	plt.title('Population size: ' + str(population_size) + ' | ' +
+		'Generations: ' + str(num_generations) + ' | ' +
+		'Max operations: ' + str(max_num_operations) + ' | ' +
+		'Mutation percentage: ' + str(mutation_percent) + ' | ' +
+		'Cull percentage: ' + str(cull_percent), fontsize=8)
 	plt.legend()
 	plt.show()
 
@@ -337,7 +342,8 @@ for filename in _iterArg:
 			#add fitness data to graph
 			graph_data_lines.append(id.h_list_graph)
 
-			generateFitnessGraph(id.f_list_graph)
+			generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
+				id.cull_percent, id.mutation_percent, id.max_num_operations)
 
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
@@ -360,7 +366,8 @@ for filename in _iterArg:
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
 				execution_time,str(id.init_num_nodes), str(id.generation))
 
-		generateFitnessGraph(id.f_list_graph)
+		generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
+			id.cull_percent, id.mutation_percent, id.max_num_operations)
 
 print("average error: "+str(error_sum/(len(argv)-1)))
 print("average generations: "+str(generation_sum/(len(argv)-1)))
