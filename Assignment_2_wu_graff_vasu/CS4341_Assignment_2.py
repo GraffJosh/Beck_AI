@@ -38,7 +38,7 @@ class SearchAlgorithm:
 		self.num_generations = 100
 		self.max_num_operations = 30
 		self.cull_percent = 0.5
-		self.mutation_percent = 0.7
+		self.mutation_percent = .5
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -91,8 +91,8 @@ class SearchAlgorithm:
 
 			# Maybe a child node can have the best heuristic?
 			self.best_node = self.zoo[0]
-			self.h_list_graph.append(self.computeMeanFitness(self.zoo))
-			self.f_list_graph.append(self.collectFitnesses(self.zoo))
+			#self.h_list_graph.append(self.computeMeanFitness(self.zoo))
+			#self.f_list_graph.append(self.collectFitnesses(self.zoo))
 			#print (len(self.zoo))
 
 		for organism in self.zoo:
@@ -342,8 +342,8 @@ for filename in _iterArg:
 			#add fitness data to graph
 			graph_data_lines.append(id.h_list_graph)
 
-			generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
-				id.cull_percent, id.mutation_percent, id.max_num_operations)
+			# generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
+			# 	id.cull_percent, id.mutation_percent, id.max_num_operations)
 
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
@@ -366,8 +366,8 @@ for filename in _iterArg:
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
 				execution_time,str(id.init_num_nodes), str(id.generation))
 
-		generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
-			id.cull_percent, id.mutation_percent, id.max_num_operations)
+		# generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
+		# 	id.cull_percent, id.mutation_percent, id.max_num_operations)
 
 print("average error: "+str(error_sum/(len(argv)-1)))
 print("average generations: "+str(generation_sum/(len(argv)-1)))
