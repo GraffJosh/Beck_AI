@@ -10,7 +10,7 @@ import itertools
 import random
 import numpy
 import math
-
+import threading
 #Here is our function switch case
 math_func = {'+' : numpy.add,
 		   '-' : numpy.subtract,
@@ -33,14 +33,16 @@ class SearchAlgorithm:
 
 		# Const Variables
 		self.init_num_nodes = 4 			# number of nodes in a zoo
-		self.num_generations = 10000
+		self.num_generations = 100000
 		self.max_num_operations = 30
 		self.cull_percent = 0.5
-		self.mutation_percent = 0
+		self.mutation_percent = .7
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
 		self.zoo = []
+	def stop(self):
+		return self.best_node
 
 	#Reorders the open list according to our heuristic function
 	def reorder_nodes(self):
@@ -243,18 +245,68 @@ def printStats(search_type, error, steps, time, max_generation):
 
 class TimeoutException(Exception): pass
 
-# Handles our time out, raise the exception and does something about it
+	
+
+
+# # Handles our time out, raise the exception and does something about it
 @contextmanager
 def time_limit_manager(seconds):
 	def signal_handler(signum, frame):
 		raise TimeoutException
 	signal.signal(signal.SIGALRM, signal_handler)
-	signal.alarm(seconds)
+	#signal.alarm(seconds)
 	try:
 		yield
 	finally:
 		signal.alarm(0)
-		
+def force_timeout(thread):
+	thread.terminate()
+def main():
+	global error_sum
+	global generation_sum
+	global start_time
+	global id
+	error_sum = 0.0
+	generation_sum = 0.0
+	try:
+		#with time_limit_manager(int(time_limit)):
+
+		start_time = time.time()
+
+		# ERIK IS OUR SOLUTION NODE
+		if (search_type == 'genetic'):
+			erik = id.genetic_search()
+		end_time = time.time()
+		print ('\nCLOSEST SOLUTION PATH')
+		execution_time = str(end_time - start_time)
+		erik.printSolution()
+		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
+			execution_time, str(id.generation))
+
+		# plt.show()
+		error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
+		generation_sum = generation_sum+id.generation
+		if (search_type == 'genetic'):
+			genetic_results[0].append(float(execution_time)) #store execution time
+			#genetic_results[1].append(id.num_nodesexpanded)#store num expanded
+			#genetic_results[2].append(id.max_generation)#store maximum generation
+
+	except (TimeoutException, RuntimeError) as error:
+		end_time = time.time()
+		print ('Could not find solution\nTimed Out: ' + str(error.args))
+		if (search_type == 'genetic'):
+				genetic_results[3][0] = genetic_results[3][0]+1
+				id.best_node.printSolution()
+		execution_time = str(end_time - start_time)
+		error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
+		generation_sum = generation_sum+id.generation
+		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
+				execution_time, str(id.generation))
+		# plt.plot(id.h_list_graph)
+		# plt.ylabel('Heuristic')
+		# plt.show()
+	print("average error: "+str(error_sum/(len(argv)-1)))
+	print("average generations: "+str(generation_sum/(len(argv)-1)))
 
 _iterArg =iter(argv)
 if len(argv) > 1:
@@ -266,8 +318,7 @@ genetic_results = [[0 for x in range(w)] for y in range(h)]
 
 #Limit the recursion limit
 sys.setrecursionlimit(10000)
-error_sum = 0.0
-generation_sum = 0.0
+
 for filename in _iterArg:
 	if len(argv) > 1 :
 		args = []
@@ -287,54 +338,36 @@ for filename in _iterArg:
 		else:
 			print ("not enough arguments in file")
 			exit(0)
-
-	# else:
-	# 	# Manual Input
-	# 	search_type = input('Search type? (iterative, genetic): ')
-	# 	starting_value = float(input('Starting value?: '))
-	# 	target_value = float(input('Target_Value?: '))
-	# 	time_limit = float(input('Time limit? (seconds): '))
-	# 	operations = input('Operations? (separate by spaces): ')
-	# 	operations_parsed = parseOperations(operations)
-
-	
-	try:
-		with time_limit_manager(int(time_limit)):
-
-			start_time = time.time()
+		try:
 			id = SearchAlgorithm(float(starting_value), float(target_value), operations_parsed)
+			main_thread = threading.Thread(None, main, "main_thread")
+			main_thread.start()
+			time.sleep(.5)
+			if(main_thread.isAlive()):
+				raise TimeoutException
+		# else:
+		# 	# Manual Input
+		# 	search_type = input('Search type? (iterative, genetic): ')
+		# 	starting_value = float(input('Starting value?: '))
+		# 	target_value = float(input('Target_Value?: '))
+		# 	time_limit = float(input('Time limit? (seconds): '))
+		# 	operations = input('Operations? (separate by spaces): ')
+		# 	operations_parsed = parseOperations(operations)
 
-			# ERIK IS OUR SOLUTION NODE
-			if (search_type == 'genetic'):
-				erik = id.genetic_search()
+		except (TimeoutException, RuntimeError) as error:
+
 			end_time = time.time()
-			print ('\nCLOSEST SOLUTION PATH')
+			print ('Could not find solution\nTimed Out: ' + str(error.args))
+			if (search_type == 'genetic'):
+					genetic_results[3][0] = genetic_results[3][0]+1
+					id.best_node.printSolution()
 			execution_time = str(end_time - start_time)
-			erik.printSolution()
-			printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time, str(id.generation))
-
-			# plt.show()
 			error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
 			generation_sum = generation_sum+id.generation
-			if (search_type == 'genetic'):
-				genetic_results[0].append(float(execution_time)) #store execution time
-				#genetic_results[1].append(id.num_nodesexpanded)#store num expanded
-				#genetic_results[2].append(id.max_generation)#store maximum generation
-
-	except (TimeoutException, RuntimeError) as error:
-		end_time = time.time()
-		print ('Could not find solution\nTimed Out: ' + str(error.args))
-		if (search_type == 'genetic'):
-				genetic_results[3][0] = genetic_results[3][0]+1
-				id.best_node.printSolution()
-		execution_time = str(end_time - start_time)
-		error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
-		generation_sum = generation_sum+id.generation
-		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time, str(id.generation))
-		# plt.plot(id.h_list_graph)
-		# plt.ylabel('Heuristic')
-		# plt.show()
-print("average error: "+str(error_sum/(len(argv)-1)))
-print("average generations: "+str(generation_sum/(len(argv)-1)))
+			printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
+					execution_time, str(id.generation))
+			# plt.plot(id.h_list_graph)
+			# plt.ylabel('Heuristic')
+			# plt.show()
+			print("average error: "+str(error_sum/(len(argv)-1)))
+			print("average generations: "+str(generation_sum/(len(argv)-1)))
