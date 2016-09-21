@@ -4,12 +4,14 @@ import signal
 from contextlib import contextmanager
 from sys import argv
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 import sys
 import time
 import itertools
 import random
 import numpy
 import math
+import os
 
 #Here is our function switch case
 math_func = {'+' : numpy.add,
@@ -32,8 +34,8 @@ class SearchAlgorithm:
 
 		# Const Variables
 
-		self.max_population_size = 50		# number of nodes in a zoo
-		self.max_num_generations = 1000      # how many generations to try
+		self.max_population_size = 100		# number of nodes in a zoo
+		self.max_num_generations = 200      # how many generations to try
 		self.max_num_operations = 30		# max number of operators
 		self.percent_cull = 0.5				# percentage to kill off / generation
 		self.percent_mutation = .7			# percentage to mutate randomly / generation
@@ -44,7 +46,7 @@ class SearchAlgorithm:
 
 	#Reorders the open list according to our heuristic function
 	def reorder_nodes(self):
-		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
+		self.zoo.sort(key=lambda x: abs(self.goal - x.value), reverse=True)
 
 	#Initialize the first generation
 	def init_population(self):
@@ -80,6 +82,8 @@ class SearchAlgorithm:
 			self.mutate()
 			# evaluate the fitness and values
 			self.evaluateOrganisms()
+			# compute mean fitness
+			self.h_list_graph.append(self.compute_mean_fitness())
 		return self.best_node
 
 	def evaluateOrganisms(self):
@@ -101,8 +105,9 @@ class SearchAlgorithm:
 		self.zoo = self.zoo[cutoff_index:]
 
 	def mutate(self):
+		# randomly mutate a percentage of the population
 		for index in range(0, math.floor(len(self.zoo) * self.percent_mutation)):
-			random.choice(self.zoo).irradiate(self.operations_list)
+			random.choice(self.zoo).irradiate(self.operations_list, self.max_num_operations)
 
 		#breed the population with itself
 	def breed_population(self):
@@ -152,6 +157,9 @@ class SearchAlgorithm:
 		# return a random parent based on weighting
 		return numpy.random.choice(parents, p = probabilities)
 
+	def compute_mean_fitness(self):
+		return numpy.sum(node.heuristic for node in self.zoo)/len(self.zoo)
+
 	def collectFitnesses(self, generation_list):
 		fitness_list = []
 		for node in generation_list:
@@ -196,7 +204,7 @@ class Node:
 		return 1/abs(self.goal - num)
 
 	#inject nuclear material into portion of the population
-	def irradiate(self, operations_list):
+	def irradiate(self, operations_list, max_operations):
 		radiation = random.randint(0,2)
 		if(len(self.operations)>0):
 			#print(radiation)
@@ -245,17 +253,27 @@ def printStats(search_type, error, steps, time, population_size, max_generation)
 
 #creates a matplot of list of data
 def generateFitnessGraph(h_list, population_size, num_generations, cull_percent, mutation_percent, max_num_operations):
-	for generation in h_list:
-		for organism in generation:
-			plt.scatter(organism[1], organism[0])
-	plt.ylabel('Fitness')
-	plt.xlabel('Generation')
-	plt.title('Population size: ' + str(population_size) + ' | ' +
+	txt = ('Population size: ' + str(population_size) + ' | ' +
 		'Generations: ' + str(num_generations) + ' | ' +
-		'Max operations: ' + str(max_num_operations) + ' | ' +
-		'Mutation percentage: ' + str(mutation_percent) + ' | ' +
-		'Cull percentage: ' + str(cull_percent), fontsize=8)
-	plt.legend()
+		'Max operations: ' + str(max_num_operations) + '\n' +
+		'Mutation percentage: ' + str(mutation_percent*100) + '%' + ' | ' +
+		'Cull percentage: ' + str(cull_percent*100) + '%')
+	fig = plt.figure()
+	gs = gridspec.GridSpec(2, 1, height_ratios=[7, 1]) 
+	m = fig.add_subplot(gs[0])
+	m.set_title('Genetic Algorithm: Fitness vs. Generation')
+	for data_line in h_list:
+		m.plot(data_line)
+	m.set_ylabel('Fitness')
+	m.set_xlabel('Generation\n\n' + txt)
+	sv_txt = ('P' + str(population_size) +
+		'G' + str(num_generations) +
+		'O' + str(max_num_operations) +
+		'M' + str(int(mutation_percent*100)) +
+		'C' + str(int(cull_percent*100)))
+	cwd = os.getcwd()
+	graph_folder = '/saved_graphs/'
+	fig.savefig(cwd + graph_folder + sv_txt + '.png')
 	plt.show()
 
 
@@ -328,8 +346,8 @@ for filename in _iterArg:
 			#add fitness data to graph
 			graph_data_lines.append(id.h_list_graph)
 
-			# generateFitnessGraph(id.f_list_graph, id.max_population_size, id.num_generations, 
-			# 	id.cull_percent, id.mutation_percent, id.max_num_operations)
+			# generateFitnessGraph(id.h_list_graph, id.max_population_size, id.max_num_generations, 
+			# id.percent_cull, id.percent_mutation, id.max_num_operations)
 
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
@@ -352,10 +370,11 @@ for filename in _iterArg:
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
 				execution_time,str(id.max_population_size), str(id.generation))
 
-		# generateFitnessGraph(id.f_list_graph, id.max_population_size, id.num_generations, 
-		# 	id.cull_percent, id.mutation_percent, id.max_num_operations)
+		# generateFitnessGraph(id.h_list_graph, id.max_population_size, id.max_num_generations, 
+		# 	id.percent_cull, id.percent_mutation, id.max_num_operations)
 
 print("average error: "+str(error_sum/(len(argv)-1)))
 print("average generations: "+str(generation_sum/(len(argv)-1)))
 # create graph for each run
-# generateFitnessGraph(graph_data_lines)
+generateFitnessGraph(graph_data_lines, id.max_population_size, id.max_num_generations, 
+	id.percent_cull, id.percent_mutation, id.max_num_operations)
