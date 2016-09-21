@@ -22,23 +22,21 @@ math_func = {'+' : numpy.add,
 #Algorithm Search Class for each type
 class SearchAlgorithm:
 	def __init__(self, start, goal, operations_list):
-		self.start_node = Node(start,goal,operations_list)
-		self.current_node = self.start_node
 		self.start = start
 		self.goal = goal
 		self.operations_list = operations_list
 		self.generation = 0
-		self.best_node = self.current_node
+		self.best_node = Node(self.start, self.goal, self.operations_list)
 		self.h_list_graph = []
 		self.f_list_graph = []
 
 		# Const Variables
 
-		self.init_num_nodes = 50		# number of nodes in a zoo
-		self.num_generations = 100
-		self.max_num_operations = 30
-		self.cull_percent = 0.5
-		self.mutation_percent = .5
+		self.max_population_size = 50		# number of nodes in a zoo
+		self.max_num_generations = 1000      # how many generations to try
+		self.max_num_operations = 30		# max number of operators
+		self.percent_cull = 0.5				# percentage to kill off / generation
+		self.percent_mutation = .7			# percentage to mutate randomly / generation
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -49,84 +47,90 @@ class SearchAlgorithm:
 		self.zoo.sort(key=lambda x: abs(self.goal - x.value))
 
 	#Initialize the first generation
-	def init_operations(self):
-
+	def init_population(self):
 		self.generation += 1
-		for node_num in range(self.init_num_nodes):
-
+		for node_num in range(self.max_population_size):
 			op_array = [] # a list of nodes
-			
 			# appends to the zoo an initialized node given a maximum number of operations
 			for op_num in range(random.randint(1,self.max_num_operations)):
 				# appends to op_array a random operator from our pool
 				random.shuffle(self.operations_list) # why have this? lol
 				op_array.append(random.choice(self.operations_list))
-
 			# add the node into the zoo (population)
-			self.zoo.append(Node(self.start, self.goal, op_array))
+			new_node = Node(self.start, self.goal, op_array)
+			self.zoo.append(new_node)
+			# establish a best node at the start, doesn't matter which is it in the first population
+			# as long as it's valid
+
+		# evaluate the fitness and values
+		self.evaluateOrganisms()
 
 	def genetic_search(self):
 		#create initial population
-		self.init_operations()
+		self.init_population()
 		#for each generation
-		for num in range(self.num_generations):
-			#for every node in the zoo
-			for node in self.zoo:
-				node.value = node.eval_node_val()		#eval the node
-				node.heuristic = node.eval_node_fitness()	#eval the heuristic
-				# if node.value == self.goal:
-				# 	self.best_node = node
-				# 	return self.best_node
-				#print (len(node.operations))
-			
+		for generation in range(self.max_num_generations):
 			# Reorder nodes in terms of best heuristic
 			self.reorder_nodes()
 			# Cull the weaker nodes
 			self.cull()
 			# birds & bees baby
-			self.zoo.extend(self.breed_population())
-
+			self.breed_population()
 			#mutate randomly
 			self.mutate()
-
-			# Maybe a child node can have the best heuristic?
-			self.best_node = self.zoo[0]
-			#self.h_list_graph.append(self.computeMeanFitness(self.zoo))
-			#self.f_list_graph.append(self.collectFitnesses(self.zoo))
-			#print (len(self.zoo))
-
-		for organism in self.zoo:
-			if organism.eval_node_fitness() == float("inf"):
-				self.best_node = organism
-
-			if organism.eval_node_fitness() > self.best_node.eval_node_fitness():
-				self.best_node = organism
-
+			# evaluate the fitness and values
+			self.evaluateOrganisms()
 		return self.best_node
+
+	def evaluateOrganisms(self):
+		#for every node in the zoo
+		for node in self.zoo:
+			node.value = node.eval_node_val()				#eval the node value
+			node.heuristic = node.eval_node_fitness()		#eval the node heuristic
+			if (node.value == node.goal):
+				self.best_node = node
+			if node.heuristic > self.best_node.heuristic:
+				self.best_node = node
+			if numpy.isnan(node.value) or numpy.isnan(node.heuristic): # make sure that the value or heuristic is valid
+				self.zoo.remove(node)
 
 		#kill the weak
 	def cull(self):
-		for index in range(math.floor(len(self.zoo) * self.cull_percent), len(self.zoo)):
-			del(self.zoo[len(self.zoo)-1])
+		# find the point where to cut off the rest of the organisms
+		cutoff_index = math.floor(len(self.zoo) * (1 - self.percent_cull))
+		self.zoo = self.zoo[cutoff_index:]
 
 	def mutate(self):
-		for index in range(0, math.floor(len(self.zoo) * self.mutation_percent)):
+		for index in range(0, math.floor(len(self.zoo) * self.percent_mutation)):
 			random.choice(self.zoo).irradiate(self.operations_list)
 
 		#breed the population with itself
 	def breed_population(self):
 		self.generation += 1
-		new_zoo = [] # this is the new population
+		fitnesses = []
+		#make a copy of the current zoo to use as parents of the next generatin
+		parent_list = list(self.zoo)
 		for organism in self.zoo:
+			fitness = organism.eval_node_fitness()
+			if numpy.isnan(fitness) or numpy.isinf(fitness):
+				# means that a solution has been found
+				fitnesses.append(0)
+			else:
+				fitnesses.append(fitness)
 
+		fitnesses = numpy.array(fitnesses)
+		normalizer = fitnesses.sum()
+		# normalize to make sum of proabilities = 1 ; get probability distribution
+		prob_dist = fitnesses / normalizer
+				
+		# create children until zoo is full
+		while (len(self.zoo) < self.max_population_size):
 			# these two operations should happen based on the fitness function
-			parentA = self.choose_weighted_parent(self.zoo) 
-			parentB = self.choose_weighted_parent(self.zoo)
-
+			parentA = self.choose_weighted_parent(parent_list, prob_dist) 
+			parentB = self.choose_weighted_parent(parent_list, prob_dist)
 			child = self.reproduce(parentA, parentB)
-			new_zoo.append(child)
-		#don't really need new zoo
-		return new_zoo
+			# append to zoo
+			self.zoo.append(child)
 
 	def reproduce(self, orgA, orgB):
 		# pick the organism with the shorter length
@@ -144,22 +148,9 @@ class SearchAlgorithm:
 		child = Node(orgA.start, orgB.goal, child_operations)
 		return child
 
-	def choose_weighted_parent(self, zoo):
-		fitnesses = []
-		weights = []
-		sum = 0
-
-		for organism in zoo:
-			sum = sum + organism.eval_node_fitness()
-			fitnesses.append(organism.eval_node_fitness())
-
-		for fitness in fitnesses:
-			weights.append(fitness/sum)
-
-		return numpy.random.choice(zoo, p = weights)
-
-	def computeMeanFitness(self, generation_list):
-		return	sum(node.heuristic for node in generation_list)/(len(generation_list))
+	def choose_weighted_parent(self, parents, probabilities):
+		# return a random parent based on weighting
+		return numpy.random.choice(parents, p = probabilities)
 
 	def collectFitnesses(self, generation_list):
 		fitness_list = []
@@ -201,11 +192,8 @@ class Node:
 
 		for operation in self.operations:
 			num = math_func[operation.operator](num, operation.integer)
-		
-		if abs(self.goal - num) == 0:
-			return float("inf")
 
-		return 1 / abs(self.goal - num)
+		return 1/abs(self.goal - num)
 
 	#inject nuclear material into portion of the population
 	def irradiate(self, operations_list):
@@ -321,7 +309,6 @@ for filename in _iterArg:
 	
 	try:
 		with time_limit_manager(int(time_limit)):
-
 			start_time = time.time()
 			id = SearchAlgorithm(float(starting_value), float(target_value), operations_parsed)
 
@@ -330,11 +317,10 @@ for filename in _iterArg:
 				erik = id.genetic_search()
 			end_time = time.time()
 			print ('\nCLOSEST SOLUTION PATH')
-
 			execution_time = str(end_time - start_time)
 			erik.printSolution()
 			printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time, str(id.init_num_nodes), str(id.generation))
+				execution_time, str(id.max_population_size), str(id.generation))
 
 			error_sum = error_sum+abs(id.best_node.eval_node_val() - target_value)
 			generation_sum = generation_sum+id.generation
@@ -342,7 +328,7 @@ for filename in _iterArg:
 			#add fitness data to graph
 			graph_data_lines.append(id.h_list_graph)
 
-			# generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
+			# generateFitnessGraph(id.f_list_graph, id.max_population_size, id.num_generations, 
 			# 	id.cull_percent, id.mutation_percent, id.max_num_operations)
 
 			if (search_type == 'genetic'):
@@ -364,9 +350,9 @@ for filename in _iterArg:
 		graph_data_lines.append(id.h_list_graph)
 		
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
-				execution_time,str(id.init_num_nodes), str(id.generation))
+				execution_time,str(id.max_population_size), str(id.generation))
 
-		# generateFitnessGraph(id.f_list_graph, id.init_num_nodes, id.num_generations, 
+		# generateFitnessGraph(id.f_list_graph, id.max_population_size, id.num_generations, 
 		# 	id.cull_percent, id.mutation_percent, id.max_num_operations)
 
 print("average error: "+str(error_sum/(len(argv)-1)))
