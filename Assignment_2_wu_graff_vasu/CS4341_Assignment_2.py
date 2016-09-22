@@ -35,10 +35,10 @@ class SearchAlgorithm:
 		# Const Variables
 
 		self.max_population_size = 100		# number of nodes in a zoo
-		self.max_num_generations = 200      # how many generations to try
+		self.max_num_generations = 1000      # how many generations to try
 		self.max_num_operations = 30		# max number of operators
 		self.percent_cull = 0.5				# percentage to kill off / generation
-		self.percent_mutation = .7			# percentage to mutate randomly / generation
+		self.percent_mutation = 0.8			# percentage to mutate randomly / generation
 
 		# A zoo is an array of "nodes" where each node contains 
 		# a list of operators.
@@ -189,18 +189,14 @@ class Node:
 		
 	def eval_node_val(self):
 		num = self.start
-
 		for operation in self.operations:
 			num = math_func[operation.operator](num, operation.integer)
-
 		return num
 
 	def eval_node_fitness(self):
 		num = self.start
-
 		for operation in self.operations:
 			num = math_func[operation.operator](num, operation.integer)
-
 		return 1/abs(self.goal - num)
 
 	#inject nuclear material into portion of the population
@@ -252,7 +248,7 @@ def printStats(search_type, error, steps, time, population_size, max_generation)
 	print ('Number of generations: ' + max_generation)
 
 #creates a matplot of list of data
-def generateFitnessGraph(h_list, population_size, num_generations, cull_percent, mutation_percent, max_num_operations):
+def generateFitnessGraph(h_list, indvar, xlabel, ylabel,population_size, num_generations, cull_percent, mutation_percent, max_num_operations):
 	txt = ('Population size: ' + str(population_size) + ' | ' +
 		'Generations: ' + str(num_generations) + ' | ' +
 		'Max operations: ' + str(max_num_operations) + '\n' +
@@ -261,11 +257,12 @@ def generateFitnessGraph(h_list, population_size, num_generations, cull_percent,
 	fig = plt.figure()
 	gs = gridspec.GridSpec(2, 1, height_ratios=[7, 1]) 
 	m = fig.add_subplot(gs[0])
-	m.set_title('Genetic Algorithm: Fitness vs. Generation')
+	m.set_title('Genetic Algorithm: '+ ylabel + ' vs. ' + xlabel)
+	m.grid(True)
 	for data_line in h_list:
 		m.plot(data_line)
-	m.set_ylabel('Fitness')
-	m.set_xlabel('Generation\n\n' + txt)
+	m.set_ylabel(xlabel)
+	m.set_xlabel(ylabel+'\n\n' + txt)
 	sv_txt = ('P' + str(population_size) +
 		'G' + str(num_generations) +
 		'O' + str(max_num_operations) +
@@ -281,16 +278,27 @@ class TimeoutException(Exception): pass
 
 # Handles our time out, raise the exception and does something about it
 @contextmanager
-def time_limit_manager(seconds):
+def time_limit_manager(seconds, search):
 	def signal_handler(signum, frame):
+		search.f_list_graph.append(abs(search.best_node.value - search.best_node.goal))
 		raise TimeoutException
-	signal.signal(signal.SIGALRM, signal_handler)
-	signal.alarm(seconds)
+	def signal_best_node(signum,frame):
+		if len(seconds) == 1:
+			signal.signal(signal.SIGALRM, signal_handler)
+		tmint = seconds.pop()
+		search.f_list_graph.append(abs(search.best_node.value - search.best_node.goal))
+		signal.alarm(tmint)
+		print (abs(search.best_node.value - search.best_node.goal))
+	tmint0 = seconds.pop()
+	if (len(seconds) == 0):
+		signal.signal(signal.SIGALRM, signal_handler)
+	else:
+		signal.signal(signal.SIGALRM, signal_best_node)
+	signal.alarm(tmint0)
 	try:
 		yield
 	finally:
 		signal.alarm(0)
-		
 
 _iterArg =iter(argv)
 if len(argv) > 1:
@@ -305,6 +313,7 @@ sys.setrecursionlimit(10000)
 error_sum = 0.0
 generation_sum = 0.0
 graph_data_lines = []
+graph_error_lines = []
 for filename in _iterArg:
 	if len(argv) > 1 :
 		args = []
@@ -326,10 +335,15 @@ for filename in _iterArg:
 			exit(0)
 	
 	try:
-		with time_limit_manager(int(time_limit)):
+		# Get time data
+		# time_intervals0 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60]
+		# time_intervals1 = numpy.diff(time_intervals0)
+		# time_intervals2 = list(time_intervals1[::-1])
+		tmlimit = []
+		tmlimit.append(int(time_limit))
+		id = SearchAlgorithm(float(starting_value), float(target_value), operations_parsed)
+		with time_limit_manager(tmlimit, id):
 			start_time = time.time()
-			id = SearchAlgorithm(float(starting_value), float(target_value), operations_parsed)
-
 			# ERIK IS OUR SOLUTION NODE
 			if (search_type == 'genetic'):
 				erik = id.genetic_search()
@@ -345,9 +359,6 @@ for filename in _iterArg:
 
 			#add fitness data to graph
 			graph_data_lines.append(id.h_list_graph)
-
-			# generateFitnessGraph(id.h_list_graph, id.max_population_size, id.max_num_generations, 
-			# id.percent_cull, id.percent_mutation, id.max_num_operations)
 
 			if (search_type == 'genetic'):
 				genetic_results[0].append(float(execution_time)) #store execution time
@@ -370,11 +381,9 @@ for filename in _iterArg:
 		printStats(search_type, str(abs(id.best_node.eval_node_val() - target_value)),str(len(id.best_node.operations)),
 				execution_time,str(id.max_population_size), str(id.generation))
 
-		# generateFitnessGraph(id.h_list_graph, id.max_population_size, id.max_num_generations, 
-		# 	id.percent_cull, id.percent_mutation, id.max_num_operations)
+print("Average Error: "+str(error_sum/(len(argv)-1)))
+print("Average Generations: "+str(generation_sum/(len(argv)-1)))
 
-print("average error: "+str(error_sum/(len(argv)-1)))
-print("average generations: "+str(generation_sum/(len(argv)-1)))
-# create graph for each run
-generateFitnessGraph(graph_data_lines, id.max_population_size, id.max_num_generations, 
-	id.percent_cull, id.percent_mutation, id.max_num_operations)
+# create graph for each run and savefig
+# generateFitnessGraph(graph_data_lines, range(len(graph_data_lines)), 'Generation', 'Fitness', id.max_population_size, id.max_num_generations, 
+# 	id.percent_cull, id.percent_mutation, id.max_num_operations)
